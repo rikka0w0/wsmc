@@ -1,0 +1,38 @@
+package wsmc;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.http.HttpServerCodec;
+
+public class HttpGetSniffer extends ByteToMessageDecoder {
+    public static void appendToPipeline(ChannelPipeline pipeline) {
+    	pipeline.addFirst(new HttpGetSniffer());
+		return;
+    }
+
+	@Override
+	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+		if (in.readableBytes() > 3) {
+			byte[] byteBuffer = new byte[3];
+			in.markReaderIndex();
+			in.readBytes(byteBuffer, 0, 3);
+			in.resetReaderIndex();
+			String methodString = new String(byteBuffer, StandardCharsets.US_ASCII);
+
+			if (methodString.equalsIgnoreCase("GET")) {
+				System.out.println("Websocket Minecraft");
+				ctx.pipeline().replace(this, "HttpCodec", new HttpServerCodec());
+				ctx.pipeline().addAfter("HttpCodec", "HttpHandler", new HttpServerHandler());
+			} else {
+				System.out.println("TCP Minecraft");
+				ctx.pipeline().remove(this);
+			}
+		}
+	}
+
+}

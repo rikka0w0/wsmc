@@ -1,0 +1,105 @@
+plugins {
+	id 'fabric-loom' version '1.3-SNAPSHOT'
+	id 'maven-publish'
+}
+
+repositories {
+    // Auto Config & Cloth Config
+    maven { url 'https://maven.shedaniel.me/' }
+    // Modmenu dev
+    maven { url 'https://maven.terraformersmc.com/releases/' }
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/wsmc.accesswidener")
+}
+
+dependencies {
+	//to change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	
+	// Auto Config & Cloth Config
+	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
+
+	// Modmenu dev
+	modImplementation ("com.terraformersmc:modmenu:${project.mod_menu_version}") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
+
+	// javax.annotation.Nullable
+	modImplementation 'com.google.code.findbugs:jsr305:3.0.1'
+}
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.dev_group
+
+processResources {
+	inputs.property "version", project.version
+	def props = [
+		"version": project.version, 
+		"minecraft_version_min": project.minecraft_version_min,
+		"minecraft_version_max": project.minecraft_version_max,
+		"loader_version": project.loader_version, 
+		"fabric_version": project.fabric_version,
+		"cloth_config_version": project.cloth_config_version,
+		"fabric_shield_lib_version": project.fabric_shield_lib_version
+	]
+
+	filesMatching("fabric.mod.json") {
+		expand props
+	}
+}
+
+// configure  the source folders
+sourceSets {
+    main {
+        java {
+            srcDir "../src/main/java"
+        }
+        resources {
+            srcDir "../src/main/resources"
+            srcDir "../src/generated/resources"
+            exclude '.cache'
+            exclude 'Thumbs.db'
+        }
+    }
+}
+
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+
+	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
+	it.options.release = 17
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+}
+
+jar {
+	from "LICENSE"
+}
+
+// https://github.com/FabricMC/fabric-loom/issues/452
+afterEvaluate {
+	tasks.remapJar {
+		archiveClassifier.set("fabric")
+	}
+}

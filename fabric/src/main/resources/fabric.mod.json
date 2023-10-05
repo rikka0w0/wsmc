@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "wsmc",
+  "version": "${version}",
+  "name": "WSMC",
+  "description": "Websocket wrapper for Minecraft Java",
+  "authors": [
+    "Globox_Z",
+    "Rikka0w0"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/wsmc",
+    "sources": "https://github.com/rikka0w0/wsmc",
+    "issues": "https://github.com/rikka0w0/wsmc/issues"
+  },
+  "license": "GPLv3",
+  "icon": "wsmc_logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "wsmc.fabric.FabricEntry"
+    ],
+    "modmenu": [
+      "wsmc.fabric.ModMenuIntegration"
+    ],
+    "client": [
+      "wsmc.fabric.FabricClientEntry"
+    ]
+  },
+  "mixins": [
+    "wsmc.mixins.json"
+  ],
+  "accessWidener": "wsmc.accesswidener",
+  "depends": {
+    "minecraft": ">=${minecraft_version_min}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_version}",
+    "cloth-config2": ">=${cloth_config_version}"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
