@@ -25,11 +25,11 @@ public class HttpGetSniffer extends ByteToMessageDecoder {
 			String methodString = new String(byteBuffer, StandardCharsets.US_ASCII);
 
 			if (methodString.equalsIgnoreCase("GET")) {
-				System.out.println("Websocket Minecraft");
+				WSMC.debug("Websocket Minecraft");
 				ctx.pipeline().replace(this, "HttpCodec", new HttpServerCodec());
 				ctx.pipeline().addAfter("HttpCodec", "HttpHandler", new HttpServerHandler());
 			} else {
-				System.out.println("TCP Minecraft");
+				WSMC.debug("TCP Minecraft");
 				ctx.pipeline().remove(this);
 			}
 		}

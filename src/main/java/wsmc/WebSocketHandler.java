@@ -7,9 +7,6 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.buffer.ByteBuf;
 
@@ -44,15 +41,16 @@ public class WebSocketHandler
 		public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
 			if (msg instanceof ByteBuf) {
 				ByteBuf byteBuf = (ByteBuf) msg;
-				System.out.println("S->C (" +byteBuf.readableBytes() + "):");
-				byteBuf.markReaderIndex();
-				dumpByteArray(byteBuf);
-				byteBuf.resetReaderIndex();
+
+				if (WSMC.debug()) {
+					WSMC.debug("S->C (" +byteBuf.readableBytes() + "):");
+					dumpByteArray(byteBuf);
+				}
 
 				ctx.write(new BinaryWebSocketFrame(byteBuf), promise);
 			} else {
 				// DefaultFullHttpResponse
-				System.out.println("Passthrough: " + msg.getClass().getName());
+				WSMC.debug("S->C Passthrough: " + msg.getClass().getName());
 				ctx.write(msg, promise);
 			}
 		}
@@ -62,31 +60,20 @@ public class WebSocketHandler
 		@Override
 		public void channelRead(ChannelHandlerContext ctx, Object msg) {
 			if (msg instanceof WebSocketFrame) {
-				System.out.println("This is a WebSocket frame, Client Channel : " + ctx.channel());
 				if (msg instanceof BinaryWebSocketFrame) {
 					ByteBuf content = ((WebSocketFrame) msg).content();
-					System.out.println("C->S (" + content.readableBytes() + "):");
-					content.markReaderIndex();
-					dumpByteArray(content);
-					content.resetReaderIndex();
+
+					if (WSMC.debug()) {
+						WSMC.debug("C->S (" + content.readableBytes() + "):");
+						dumpByteArray(content);
+					}
+
 					ctx.fireChannelRead(content);
-				} else if (msg instanceof TextWebSocketFrame) {
-					System.out.println("TextWebSocketFrame Received : ");
-					ctx.channel().writeAndFlush(
-							new TextWebSocketFrame("Message recieved : " + ((TextWebSocketFrame) msg).text()));
-					System.out.println(((TextWebSocketFrame) msg).text());
-				} else if (msg instanceof PingWebSocketFrame) {
-					System.out.println("PingWebSocketFrame Received : ");
-					System.out.println(((PingWebSocketFrame) msg).content());
-				} else if (msg instanceof PongWebSocketFrame) {
-					System.out.println("PongWebSocketFrame Received : ");
-					System.out.println(((PongWebSocketFrame) msg).content());
 				} else if (msg instanceof CloseWebSocketFrame) {
-					System.out.println("CloseWebSocketFrame Received : ");
-					System.out.println("ReasonText :" + ((CloseWebSocketFrame) msg).reasonText());
-					System.out.println("StatusCode : " + ((CloseWebSocketFrame) msg).statusCode());
+					WSMC.debug("CloseWebSocketFrame (" + ((CloseWebSocketFrame) msg).statusCode()
+								+ ") received : " + ((CloseWebSocketFrame) msg).reasonText());
 				} else {
-					System.out.println("Unsupported WebSocketFrame");
+					WSMC.debug("Unsupported WebSocketFrame: " + msg.getClass().getName());
 				}
 			}
 		}
