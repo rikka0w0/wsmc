@@ -4,7 +4,7 @@
 	"compatibilityLevel": "JAVA_17",
 	"refmap": "wsmc.refmap.json",
 	"mixins": [
-		"MixinServerConnectionListener"
+		"MixinConnection"
 	],
 	"client": [
 		"MixinConnectScreen",
