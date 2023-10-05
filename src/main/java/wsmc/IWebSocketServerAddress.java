@@ -23,8 +23,16 @@ public interface IWebSocketServerAddress {
 	@Nullable
 	String getScheme();
 
+	default boolean isVanilla() {
+		return getScheme() == null;
+	}
+
 	default ServerAddress asServerAddress() {
 		return (ServerAddress) (Object) this;
+	}
+
+	public static IWebSocketServerAddress from(ServerAddress serverAddress) {
+		return (IWebSocketServerAddress) (Object) serverAddress;
 	}
 
 	/**

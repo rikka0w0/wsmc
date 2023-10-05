@@ -7,6 +7,7 @@
 		"MixinServerConnectionListener"
 	],
 	"client": [
+		"MixinConnectScreen",
 		"MixinServerAddress"
 	],
 	"minVersion": "0.8"

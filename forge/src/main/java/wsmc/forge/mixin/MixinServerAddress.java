@@ -46,7 +46,7 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 
 	@Inject(at = @At("HEAD"), method = "toString", cancellable = true)
 	private void toStringCustom(CallbackInfoReturnable<String> callback) {
-		if (this.scheme != null) {
+		if (!this.isVanilla()) {
 			// Skip vanilla logic if scheme is non-null
 			String hostName = this.asServerAddress().getHost();
 			int port = this.asServerAddress().getPort();
@@ -61,14 +61,14 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 		if (this == object)
 			callback.setReturnValue(true);
 
-		if (this.scheme == null) {
+		if (this.isVanilla()) {
 			// We are vanilla
 
 			if (object instanceof IWebSocketServerAddress) {
 				IWebSocketServerAddress ws = (IWebSocketServerAddress) object;
 
 				// We are vanilla but input is modded
-				if (ws.getScheme() != null)
+				if (!ws.isVanilla())
 					callback.setReturnValue(false);
 			}
 
@@ -94,7 +94,7 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 
 	@Inject(at = @At("HEAD"), method = "hashCode", cancellable = true)
 	private void hashCodeCustom(CallbackInfoReturnable<Integer> callback) {
-		if (this.scheme != null) {
+		if (!this.isVanilla()) {
 			// We are modded, cover scheme and path in the hash
 			int hash = Objects.hashCode(this.hostAndPort, this.scheme, this.path);
 			callback.setReturnValue(hash);
