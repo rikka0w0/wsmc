@@ -4,11 +4,15 @@
 	"compatibilityLevel": "JAVA_17",
 	"refmap": "wsmc.refmap.json",
 	"mixins": [
-		"MixinConnection"
+		"MixinServerConnectionListener"
 	],
 	"client": [
+		"MixinConnection",
+		"MixinConnectionChInit",
 		"MixinConnectScreen",
-		"MixinServerAddress"
+		"MixinConnectScreenThread",
+		"MixinServerAddress",
+		"MixinServerStatusPinger"
 	],
 	"minVersion": "0.8"
 }
