@@ -26,7 +26,7 @@ hopefully it will work in future versions (although very unlikely).
 
 ## Milestones
 1. Server listens for WebSocket connections. (Done)
-2. Client connects to a WebSocket server.
+2. Client connects to a WebSocket server. (Done)
 3. Server acquires client statistics (e.g. real IP).
 
 ## Dependencies
