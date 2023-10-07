@@ -8,6 +8,12 @@ repositories {
     maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
+loom {
+	mixin {
+		defaultRefmapName = "wsmc.refmap.json"
+	}
+}
+
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -26,7 +32,7 @@ dependencies {
 	modImplementation 'com.google.code.findbugs:jsr305:3.0.1'
 
 	// Netty's http and websocket support
-	modImplementation(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version)
+	include(modImplementation(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version))
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
