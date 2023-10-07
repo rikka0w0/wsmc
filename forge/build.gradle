@@ -126,7 +126,7 @@ dependencies {
     // Apply Mixin AP
     annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
 
-    // Netty's http and websocket support 	
+    // Netty's http and websocket support
     minecraftLibrary(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version) {
     	exclude(group: 'io.netty')
     }
