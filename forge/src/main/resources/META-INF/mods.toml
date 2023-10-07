@@ -36,10 +36,3 @@ WebSocket wrapper for Minecraft Java
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
-
-[[dependencies.wsmc]]
-    modId = "cloth_config"
-    mandatory=true
-    versionRange="[${cloth_config_version},)"
-    ordering="NONE"
-    side="BOTH"

@@ -13,8 +13,6 @@ public class ForgeEntry {
 			instance = this;
 		else
 			throw new RuntimeException("Duplicated Class Instantiation: net.mobz.forge.MobZ");
-
-		WSMC.initConfig();
 	}
 
 	@Mod.EventBusSubscriber(modid = WSMC.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)

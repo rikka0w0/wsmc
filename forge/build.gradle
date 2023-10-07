@@ -6,10 +6,6 @@ plugins {
 	id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-repositories {
-    maven { url "https://maven.shedaniel.me/" }
-}
-
 // Load the common property
 Properties props = new Properties();
 props.load(new FileInputStream("$project.rootDir/../fabric/gradle.properties"));
@@ -17,7 +13,6 @@ props.each {prop -> project.ext.set(prop.key, prop.value)};
 
 project.ext.mod_id = project.archives_base_name;
 project.ext.minecraft_version_range = '[' + project.minecraft_version_min + ', ' + project.minecraft_version_max + ')';
-project.ext.mixin_version = '0.8.5';
 
 // These are defined in ../fabric/gradle.properties
 version = project.mod_version
@@ -61,8 +56,6 @@ minecraft {
 
 			// Recommended logging level for the console
 			property 'forge.logging.console.level', 'debug'
-			
-			property 'log4j.configurationFile', 'C:/Users/zhouh/AppData/Roaming/.minecraft/debugsettings.xml'
 
 			mods {
 				"${mod_id}" {
@@ -129,13 +122,19 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-    // defined in ../fabric/gradle.properties
-    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:${project.cloth_config_version}")
-    
     // Apply Mixin AP
     annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
-    
-    minecraftLibrary 'io.netty:netty-codec-http:4.1.77.Final'
+
+    // Netty's http and websocket support 	
+    minecraftLibrary(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version) {
+    	exclude(group: 'io.netty')
+    }
+
+    // Pack io.netty:netty-codec-http in the mod jar
+    jarJar(group: 'io.netty', name: 'netty-codec-http', version: "[${project.netty_version_min}, ${project.netty_version_max})") {
+    	jarJar.pin(it, project.netty_version)
+    	exclude(group: 'io.netty')
+    }
 }
 
 mixin {
@@ -165,7 +164,7 @@ tasks.named('jar', Jar).configure {
     // This is the preferred method to reobfuscate your jar file
 	finalizedBy 'reobfJar'
 }
-jar.archiveClassifier = 'forge';
+jar.archiveClassifier = 'forge-slim';
 
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
@@ -176,7 +175,6 @@ tasks.named('processResources', ProcessResources).configure {
 			minecraft_version_range: minecraft_version_range,
 			forge_version_range: forge_version_range,
 			loader_version_range: loader_version_range,
-			cloth_config_version: project.cloth_config_version,
 			mod_id: mod_id,
 			mod_version: mod_version,
 	]
@@ -189,4 +187,9 @@ tasks.named('processResources', ProcessResources).configure {
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+jarJar.enable()
+tasks.jarJar {
+    archiveClassifier.set('forge')
 }
