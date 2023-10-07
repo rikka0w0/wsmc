@@ -1,4 +1,4 @@
-package wsmc.forge.mixin;
+package wsmc.mixin;
 
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Final;

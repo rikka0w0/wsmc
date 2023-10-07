@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "wsmc.forge.mixin",
+	"package": "wsmc.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"refmap": "wsmc.refmap.json",
 	"mixins": [

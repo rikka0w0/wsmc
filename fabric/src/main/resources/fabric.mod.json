@@ -17,15 +17,6 @@
   "icon": "wsmc_logo.png",
   "environment": "*",
   "entrypoints": {
-    "main": [
-      "wsmc.fabric.FabricEntry"
-    ],
-    "modmenu": [
-      "wsmc.fabric.ModMenuIntegration"
-    ],
-    "client": [
-      "wsmc.fabric.FabricClientEntry"
-    ]
   },
   "mixins": [
     "wsmc.mixins.json"
@@ -33,9 +24,7 @@
   "accessWidener": "wsmc.accesswidener",
   "depends": {
     "minecraft": ">=${minecraft_version_min}",
-    "fabricloader": ">=${loader_version}",
-    "fabric-api": ">=${fabric_version}",
-    "cloth-config2": ">=${cloth_config_version}"
+    "fabricloader": ">=${loader_version}"
   },
   "suggests": {
     "flamingo": "*"

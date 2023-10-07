@@ -1,4 +1,4 @@
-package wsmc.forge.mixin;
+package wsmc.mixin;
 
 import java.net.InetSocketAddress;
 

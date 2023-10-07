@@ -6,8 +6,6 @@ import java.net.URISyntaxException;
 
 import javax.annotation.Nullable;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 
 /**
@@ -15,9 +13,8 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
  * Assumes only {@link ServerAddress} implements this interface.
  */
 public interface IWebSocketServerAddress {
-	void setSchemeAndPath(@Nullable String scheme, @NonNull String path);
+	void setSchemeAndPath(@Nullable String scheme, String path);
 
-	@NonNull
 	String getPath();
 
 	@Nullable
