@@ -8,10 +8,6 @@ repositories {
     maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
-loom {
-	accessWidenerPath = file("src/main/resources/wsmc.accesswidener")
-}
-
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
