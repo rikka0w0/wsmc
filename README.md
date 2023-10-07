@@ -5,24 +5,27 @@ Since most CDN providers(at least for their free tier) do not support raw TCP pr
 For Minecraft 1.20.2, Forge and Fabric.
 
 This branch is for 1.20.2,
-hopefully it will work in future versions (although very unlikely).
+hopefully, it will work in future versions (although very unlikely).
+
+This mod runs standalone and does not have any dependency.
 
 ## When this mod is installed on a server:
 * The server would allow players to connect via WebSocket.
 * Players can still join using vanilla TCP.
-* The server accepts and handles TCP and WebSocket connection on the same listening port.
+* The server accepts and handles TCP and WebSocket connections on the same listening port.
 * Without installing this mod on the client side, a player can still join a server that has this mod using vanilla TCP.
 
 ## When this mod is installed on a client:
-* The client can join WebSocket-enabled servers.
-* The client can join any servers using vanilla TCP.
+* The client can join WebSocket-enabled servers using URI like `ws://hostname.com:port/path_to_minecraft_endpoint`.
+* The client can join any servers using vanilla TCP using the old syntax, e.g. `hostname_or_ip:port`.
 
 ## Note
-* This mod can be installed on both 
-* Only the Lan server owner need to install this mod.
+* This mod does not affect any gameplay.
+* This mod does not modify any GUI.
 * Vanilla clients can join your server even if you install this mod, note that other mods you have may prevent vanilla clients from joining.
-* Installing this mod does not prevent you from joining other vanilla or mod servers.
-* If a player joins via CDN-proxied WebSocket, the server can still get the real IP of the player.
+* Installing this mod on your client does not prevent you from joining other vanilla or mod servers.
+* The server can still get the real IP of the players who joined via CDN-proxied WebSocket.
+* This mod is compatible with other TCP-WebSocket proxies, such as websocat.
 
 ## Milestones
 1. Server listens for WebSocket connections. (Done)
