@@ -11,6 +11,7 @@ import io.netty.channel.Channel;
 import net.minecraft.network.Connection;
 import wsmc.IWebSocketServerAddress;
 import wsmc.client.IConnectionEx;
+import wsmc.client.WebSocketClientHandler;
 
 @Debug(export = true)
 @Mixin(targets = "net.minecraft.network.Connection$1")
@@ -28,6 +29,6 @@ public class MixinConnectionChInit {
 	protected void initChannel(Channel channel, CallbackInfo callback) {
 		IConnectionEx connection = (IConnectionEx) this.connection;
 		IWebSocketServerAddress wsInfo = connection.getWsInfo();
-		// TODO: hookPipeline(channel, wsInfo);
+		WebSocketClientHandler.hookPipeline(channel.pipeline(), wsInfo);
 	}
 }

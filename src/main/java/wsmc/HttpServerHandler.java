@@ -37,7 +37,7 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 				WSMC.debug("Constructed URL : " + url);
 
 				// Adding new handler to the existing pipeline to handle WebSocket Messages
-				ctx.pipeline().replace(this, "websocketHandler", new WebSocketHandler());
+				ctx.pipeline().replace(this, "WsmcWebSocketServerHandler", new WebSocketHandler.WebSocketServerHandler());
 
 				WSMC.debug("WebSocketHandler added to the pipeline");
 				WSMC.debug("Opened Channel : " + ctx.channel());

@@ -13,9 +13,9 @@ import wsmc.HttpGetSniffer;
 @Debug(export = true)
 @Mixin(targets="net.minecraft.server.network.ServerConnectionListener$1")
 public class MixinServerConnectionListener {
-	@Inject(at = @At("HEAD"), method = "initChannel")
+	@Inject(at = @At("RETURN"), method = "initChannel")
 	private void initChannel(Channel channel, CallbackInfo callback) {
 		// Server side
-		channel.pipeline().addFirst("WsmcHttpGetSniffer", new HttpGetSniffer());
+		channel.pipeline().addAfter("timeout", "WsmcHttpGetSniffer", new HttpGetSniffer());
 	}
 }

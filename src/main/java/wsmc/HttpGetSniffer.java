@@ -20,8 +20,8 @@ public class HttpGetSniffer extends ByteToMessageDecoder {
 
 			if (methodString.equalsIgnoreCase("GET")) {
 				WSMC.debug("Websocket Minecraft");
-				ctx.pipeline().replace(this, "HttpCodec", new HttpServerCodec());
-				ctx.pipeline().addAfter("HttpCodec", "HttpHandler", new HttpServerHandler());
+				ctx.pipeline().replace(this, "WsmcHttpCodec", new HttpServerCodec());
+				ctx.pipeline().addAfter("WsmcHttpCodec", "WsmcHttpHandler", new HttpServerHandler());
 			} else {
 				WSMC.debug("TCP Minecraft");
 				ctx.pipeline().remove(this);
