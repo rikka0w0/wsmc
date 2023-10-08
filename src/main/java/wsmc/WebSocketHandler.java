@@ -18,6 +18,9 @@ public abstract class WebSocketHandler extends ChannelDuplexHandler {
 	}
 
 	public static void dumpByteArray(ByteBuf byteArray) {
+		if (!WSMC.dumpBytes)
+			return;
+
 		int maxBytesPerLine = 32;
 		int totalBytes = byteArray.readableBytes();
 		byteArray.markReaderIndex();

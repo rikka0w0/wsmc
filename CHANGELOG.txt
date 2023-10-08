@@ -1,5 +1,3 @@
-1. Enable the server to listen for incoming WebSocket connections
-2. If the server find that the first request is not a HTTP GET, it will fallback to vanilla TCP.
-3. With this mod installed, a client can connect to a WebSocket-enabled server using a WebSocket URI, e.g. `ws://hostname:port/endpoint'
-4. The server ignores the endpoint in the URI.
-5. Clients can still connect to vanilla TCP servers using `hostname:port`
+1. Add disableVanillaTCP, wsmcEndpoint, debug, and dumpBytes system property options.
+2. Fix client-side behavior on WebSocket handshake failure.
+3. Bump version to 0.2

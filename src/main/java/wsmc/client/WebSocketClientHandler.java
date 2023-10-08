@@ -117,11 +117,13 @@ public class WebSocketClientHandler extends WebSocketHandler {
 
 	@Override
 	protected void sendWsFrame(ChannelHandlerContext ctx, WebSocketFrame frame, ChannelPromise promise) throws Exception {
-		if (handshakeFuture.isDone()) {
+		if (handshakeFuture.isSuccess()) {
 			ctx.write(frame, promise);
 		} else {
 			handshakeFuture.addListener((future) -> {
-				ctx.write(frame, promise);
+				if (handshakeFuture.isSuccess()) {
+					ctx.write(frame, promise);
+				}
 			});
 		}
 	}

@@ -9,6 +9,9 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 
 public class HttpGetSniffer extends ByteToMessageDecoder {
+	public final static boolean disableVanillaTCP =
+			System.getProperty("wsmc.disableVanillaTCP", "false").equalsIgnoreCase("true");
+
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 		if (in.readableBytes() > 3) {
@@ -23,6 +26,12 @@ public class HttpGetSniffer extends ByteToMessageDecoder {
 				ctx.pipeline().replace(this, "WsmcHttpCodec", new HttpServerCodec());
 				ctx.pipeline().addAfter("WsmcHttpCodec", "WsmcHttpHandler", new HttpServerHandler());
 			} else {
+				if (HttpGetSniffer.disableVanillaTCP) {
+					WSMC.info(ctx.channel().remoteAddress().toString() +
+							" attemps to establish a Vanilla TCP connection which has been disabled by WSMC.");
+					throw new RuntimeException("Vanilla TCP connection has been disabled by WSMC.");
+				}
+
 				WSMC.debug("TCP Minecraft");
 				ctx.pipeline().remove(this);
 			}
