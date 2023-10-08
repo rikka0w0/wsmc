@@ -1,5 +1,7 @@
 package wsmc;
 
+import java.util.function.Consumer;
+
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,6 +20,16 @@ import io.netty.util.CharsetUtil;
 
 public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 	public final static String wsmcEndpoint = System.getProperty("wsmc.wsmcEndpoint", null);
+
+	/**
+	 * This will be called when a WebSocket upgrade is received.
+	 * Note that this does NOT guarantee a success WebSocket handshake.
+	 */
+	private final Consumer<HttpRequest> onWsmcHandshake;
+
+	public HttpServerHandler(Consumer<HttpRequest> onWsmcHandshake) {
+		this.onWsmcHandshake = onWsmcHandshake;
+	}
 
 	/**
 	 * Checks if the incoming request matches the expected endpoint
@@ -51,6 +63,10 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 					&& isWsmcEndpoint(endpoint)) {
 				String url = "ws://" + httpRequest.headers().get("Host") + httpRequest.uri();
 				WSMC.debug("Upgrade to: " + headers.get("Upgrade") + " for: " + url);
+
+				if (this.onWsmcHandshake != null) {
+					this.onWsmcHandshake.accept(httpRequest);
+				}
 
 				// Adding new handler to the existing pipeline to handle WebSocket Messages
 				ctx.pipeline().replace(this, "WsmcWebSocketServerHandler", new WebSocketHandler.WebSocketServerHandler());

@@ -9,10 +9,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import io.netty.channel.Channel;
 import net.minecraft.network.Connection;
+
+import wsmc.IConnectionEx;
 import wsmc.IWebSocketServerAddress;
-import wsmc.client.IConnectionEx;
 import wsmc.client.WebSocketClientHandler;
 
+/**
+ * This Mixin patches the @{link io.netty.channel.ChannelInitializer} inner class
+ * in {@link net.minecraft.network.Connection}.
+ * It injects additional handlers into the pipeline when the client connects to a server.
+ */
 @Debug(export = true)
 @Mixin(targets = "net.minecraft.network.Connection$1")
 public class MixinConnectionChInit {

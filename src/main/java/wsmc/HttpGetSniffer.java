@@ -2,15 +2,23 @@ package wsmc;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.function.Consumer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpServerCodec;
 
 public class HttpGetSniffer extends ByteToMessageDecoder {
 	public final static boolean disableVanillaTCP =
 			System.getProperty("wsmc.disableVanillaTCP", "false").equalsIgnoreCase("true");
+
+	private final Consumer<HttpRequest> onWsmcHandshake;
+
+	public HttpGetSniffer(Consumer<HttpRequest> onWsmcHandshake) {
+		this.onWsmcHandshake = onWsmcHandshake;
+	}
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -24,7 +32,7 @@ public class HttpGetSniffer extends ByteToMessageDecoder {
 			if (methodString.equalsIgnoreCase("GET")) {
 				WSMC.debug("Websocket Minecraft");
 				ctx.pipeline().replace(this, "WsmcHttpCodec", new HttpServerCodec());
-				ctx.pipeline().addAfter("WsmcHttpCodec", "WsmcHttpHandler", new HttpServerHandler());
+				ctx.pipeline().addAfter("WsmcHttpCodec", "WsmcHttpHandler", new HttpServerHandler(this.onWsmcHandshake));
 			} else {
 				if (HttpGetSniffer.disableVanillaTCP) {
 					WSMC.info(ctx.channel().remoteAddress().toString() +

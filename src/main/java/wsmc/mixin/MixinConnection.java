@@ -10,17 +10,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import io.netty.handler.codec.http.HttpRequest;
 import net.minecraft.network.Connection;
 import net.minecraft.util.SampleLogger;
 
+import wsmc.IConnectionEx;
 import wsmc.IWebSocketServerAddress;
-import wsmc.client.IConnectionEx;
 
 @Debug(export = true)
 @Mixin(Connection.class)
 public class MixinConnection implements IConnectionEx {
 	@Unique
 	private IWebSocketServerAddress wsInfo = null;
+
+	@Unique
+	private HttpRequest wsHandshakeRequest = null;
 
 	/*
 	 * Prior to the invocation of connectToServer(), call {@link wsmc.ArgHolder.connectToServerArg.push}
@@ -43,5 +47,15 @@ public class MixinConnection implements IConnectionEx {
 	@Override
 	public void setWsInfo(IWebSocketServerAddress wsInfo) {
 		this.wsInfo = wsInfo;
+	}
+
+	@Override
+	public HttpRequest getWsHandshakeRequest() {
+		return this.wsHandshakeRequest;
+	}
+
+	@Override
+	public void setWsHandshakeRequest(HttpRequest wsHandshakeRequest) {
+		this.wsHandshakeRequest = wsHandshakeRequest;
 	}
 }

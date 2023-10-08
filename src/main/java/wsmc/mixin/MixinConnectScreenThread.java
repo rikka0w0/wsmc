@@ -17,8 +17,9 @@ import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.Connection;
+
+import wsmc.IConnectionEx;
 import wsmc.IWebSocketServerAddress;
-import wsmc.client.IConnectionEx;
 
 @Debug(export = true)
 @Mixin(targets = "net.minecraft.client.gui.screens.ConnectScreen$1")
@@ -36,7 +37,7 @@ public class MixinConnectScreenThread {
 	@Inject(method = "run", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/network/Connection;connect(Ljava/net/InetSocketAddress;ZLnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;"))
 	public void beforeCallConnect(CallbackInfo callback, InetSocketAddress inetsocketaddress,
-			Optional<InetSocketAddress> optional, Connection connection, ConnectScreen connectScreen) {
+			Optional<InetSocketAddress> optional, Connection connection) {
 		IWebSocketServerAddress wsAddress = IWebSocketServerAddress.from(serverAddress);
 		IConnectionEx con = (IConnectionEx) connection;
 		con.setWsInfo(wsAddress);

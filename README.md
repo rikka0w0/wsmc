@@ -14,6 +14,7 @@ This mod runs standalone and does not have any dependency.
 * Players can still join using vanilla TCP.
 * The server accepts and handles TCP and WebSocket connections on the same listening port.
 * Without installing this mod on the client side, a player can still join a server that has this mod using vanilla TCP.
+* The server can acquire client statistics (e.g., real IP) from the WebSocket handshake..
 
 ## When this mod is installed on a client:
 * The client can join WebSocket-enabled servers using URI like `ws://hostname.com:port/path_to_minecraft_endpoint`.
@@ -37,11 +38,6 @@ The configuration of this mod is passed in the "system properties". You can use 
 | wsmc.debug             | boolean | Show debug logs.                                                                                                                                                                             | Server Client | false   | true    |
 | wsmc.dumpBytes         | boolean | Dump raw WebSocket binary frames. Work only if `wsmc.debug` is set to `true`.                                                                                                                | Server Client | false   | true    |
 
-## Milestones
-1. Server listens for WebSocket connections. (Done)
-2. Client connects to a WebSocket server. (Done)
-3. Server acquires client statistics (e.g. real IP).
-
 ## Dependencies
 ### Forge Version
 * `netty-codec-http` for handling HTTP and WebSocket
@@ -55,6 +51,12 @@ To modify and debug the code, first import the "forge" or "fabric" folder as a G
 Windows users need to replace `./` and `../` with `.\` and `..\`, respectively.
 
 The codebase uses Minecraft official mapping.
+
+On the server side, if a client joins via WebSocket, its handshake request can be accessed via the vanilla `net.minecraft.network.Connection` class.
+To obtain such information, cast a Connection instance into IConnectionEx, then calls `IConnectionEx.getWsHandshakeRequest()`.
+
+This is useful for obtaining information about the original request if the Minecraft server is behind a reverse proxy (e.g. a CDN).
+For example, header `X-Forwarded-For` and `CF-IPCountry` indicate the client IP address and the client country code, respectively.
 
 ### Compile Fabric artifact
 ```
