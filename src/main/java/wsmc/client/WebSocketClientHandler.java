@@ -3,6 +3,8 @@ package wsmc.client;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.net.ssl.SSLException;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -17,7 +19,11 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
+
 import wsmc.IWebSocketServerAddress;
 import wsmc.WSMC;
 import wsmc.WebSocketHandler;
@@ -59,6 +65,20 @@ public class WebSocketClientHandler extends WebSocketHandler {
         	pipeline.addAfter("WsmcHttpClient", "WsmcHttpAggregator", new HttpObjectAggregator(8192));
         	pipeline.addAfter("WsmcHttpAggregator", "WsmcCompressionHandler", WebSocketClientCompressionHandler.INSTANCE);
         	pipeline.addAfter("WsmcCompressionHandler", "WsmcWebSocketClientHandler", handler);
+
+        	SslContext sslCtx = null;
+        	if ("wss".equalsIgnoreCase(wsInfo.getScheme())) {
+        		try {
+					sslCtx = SslContextBuilder.forClient()
+					        .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+				} catch (SSLException e) {
+					e.printStackTrace();
+				}
+
+            	if (sslCtx != null) {
+            		pipeline.addAfter("timeout", "WsmcSslHandler", sslCtx.newHandler(null));
+            	}
+        	}
         }
 	}
 
