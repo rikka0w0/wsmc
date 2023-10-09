@@ -63,7 +63,13 @@ public interface IWebSocketServerAddress {
 			int port = uri.getPort();
 			if (port < 0 || port > 65535) {
 				// Default port
-				port = 25565;
+				if (scheme.equalsIgnoreCase("ws")) {
+					port = 80;
+				} else if (scheme.equalsIgnoreCase("wss")) {
+					port = 443;
+				} else {
+					port = 25565;
+				}
 			}
 
 			String path = uri.getPath();

@@ -1,5 +1,2 @@
-On the server side, if a client joins via WebSocket, its handshake request can be accessed via the vanilla `net.minecraft.network.Connection` class.
-To obtain such information, cast a Connection instance into IConnectionEx, then calls `IConnectionEx.getWsHandshakeRequest()`.
-
-This is useful for obtaining information about the original request if the Minecraft server is behind a reverse proxy (e.g. a CDN).
-For example, header `X-Forwarded-For` and `CF-IPCountry` indicate the client IP address and the client country code, respectively.
+1. The client side now supports wss (WebSocket secured) connections.
+2. Fix client-side default port for ws and wss connections.
