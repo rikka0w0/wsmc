@@ -32,14 +32,28 @@ public class WebSocketClientHandler extends WebSocketHandler {
 	private final WebSocketClientHandshaker handshaker;
 	private ChannelPromise handshakeFuture;
 
+	/**
+	 * This will set your maximum allowable frame payload length.
+	 * Setting this value for big modpack.
+	 */
+	public final static String maxFramePayloadLength = System.getProperty("wsmc.maxFramePayloadLength ", "65536");
+
 	public WebSocketClientHandler(URI uri) {
 		super("S->C", "C->S");
+
+		int maxFramePayloadLength = 65536;
+
+		try {
+			maxFramePayloadLength = Integer.parseInt(WebSocketClientHandler.maxFramePayloadLength);
+		} catch (Exception e){
+			WSMC.debug("Unable to parse maxFramePayloadLength, value: " + WebSocketClientHandler.maxFramePayloadLength);
+		}
 
         // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
         // If you change it to V00, ping is not supported and remember to change
         // HttpResponseDecoder to WebSocketHttpResponseDecoder in the pipeline.
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri,
-				WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
+				WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength);
 	}
 
 	public static WebSocketClientHandler fromServerData(IWebSocketServerAddress wsInfo) {
