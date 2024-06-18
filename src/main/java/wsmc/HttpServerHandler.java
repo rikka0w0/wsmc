@@ -22,6 +22,12 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 	public final static String wsmcEndpoint = System.getProperty("wsmc.wsmcEndpoint", null);
 
 	/**
+	 * This will set your maximum allowable frame payload length.
+	 * Setting this value for big modpack.
+	 */
+	public final static String maxFramePayloadLength = System.getProperty("wsmc.maxFramePayloadLength", "65536");
+
+	/**
 	 * This will be called when a WebSocket upgrade is received.
 	 * Note that this does NOT guarantee a success WebSocket handshake.
 	 */
@@ -73,9 +79,18 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
 				WSMC.debug("Opened Channel: " + ctx.channel());
 
+				int maxFramePayloadLength = 65536;
+
+				try {
+					maxFramePayloadLength = Integer.parseInt(HttpServerHandler.maxFramePayloadLength);
+				} catch (Exception e){
+					WSMC.debug("Unable to parse maxFramePayloadLength, value: " + HttpServerHandler.maxFramePayloadLength);
+				}
+
+				System.out.println("maxFramePayloadLength: " + maxFramePayloadLength);
 				// Do the Handshake to upgrade connection from HTTP to WebSocket protocol
 				WebSocketServerHandshakerFactory wsFactory =
-						new WebSocketServerHandshakerFactory(url, null, true);
+							new WebSocketServerHandshakerFactory(url, null, true, maxFramePayloadLength);
 				WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(httpRequest);
 
 				if (handshaker == null) {

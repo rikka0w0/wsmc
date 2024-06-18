@@ -2,9 +2,14 @@ package wsmc.client;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -21,6 +26,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 
@@ -32,14 +38,28 @@ public class WebSocketClientHandler extends WebSocketHandler {
 	private final WebSocketClientHandshaker handshaker;
 	private ChannelPromise handshakeFuture;
 
+	/**
+	 * This will set your maximum allowable frame payload length.
+	 * Setting this value for big modpack.
+	 */
+	public final static String maxFramePayloadLength = System.getProperty("wsmc.maxFramePayloadLength", "65536");
+
 	public WebSocketClientHandler(URI uri) {
 		super("S->C", "C->S");
+
+		int maxFramePayloadLength = 65536;
+
+		try {
+			maxFramePayloadLength = Integer.parseInt(WebSocketClientHandler.maxFramePayloadLength);
+		} catch (Exception e){
+			WSMC.debug("Unable to parse maxFramePayloadLength, value: " + WebSocketClientHandler.maxFramePayloadLength);
+		}
 
         // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
         // If you change it to V00, ping is not supported and remember to change
         // HttpResponseDecoder to WebSocketHttpResponseDecoder in the pipeline.
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri,
-				WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
+				WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength);
 	}
 
 	public static WebSocketClientHandler fromServerData(IWebSocketServerAddress wsInfo) {
@@ -58,28 +78,36 @@ public class WebSocketClientHandler extends WebSocketHandler {
 	}
 
 	public static void hookPipeline(ChannelPipeline pipeline, IWebSocketServerAddress wsInfo) {
-        final WebSocketClientHandler handler = WebSocketClientHandler.fromServerData(wsInfo);
+		final WebSocketClientHandler handler = WebSocketClientHandler.fromServerData(wsInfo);
 
-        if (handler != null) {
-        	pipeline.addAfter("timeout", "WsmcHttpClient", new HttpClientCodec());
-        	pipeline.addAfter("WsmcHttpClient", "WsmcHttpAggregator", new HttpObjectAggregator(8192));
-        	pipeline.addAfter("WsmcHttpAggregator", "WsmcCompressionHandler", WebSocketClientCompressionHandler.INSTANCE);
-        	pipeline.addAfter("WsmcCompressionHandler", "WsmcWebSocketClientHandler", handler);
+		if (handler != null) {
+			pipeline.addAfter("timeout", "WsmcHttpClient", new HttpClientCodec());
+			pipeline.addAfter("WsmcHttpClient", "WsmcHttpAggregator", new HttpObjectAggregator(8192*4));
+			pipeline.addAfter("WsmcHttpAggregator", "WsmcCompressionHandler", WebSocketClientCompressionHandler.INSTANCE);
+			pipeline.addAfter("WsmcCompressionHandler", "WsmcWebSocketClientHandler", handler);
 
-        	SslContext sslCtx = null;
-        	if ("wss".equalsIgnoreCase(wsInfo.getScheme())) {
-        		try {
-					sslCtx = SslContextBuilder.forClient()
-					        .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+			if ("wss".equalsIgnoreCase(wsInfo.getScheme())) {
+				try {
+					SslContext sslCtx = SslContextBuilder.forClient()
+							.trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+
+					// SSL Parameters to set SNI TLS Extension
+					SSLParameters sslParameters = new SSLParameters();
+					sslParameters.setServerNames(Collections.singletonList(new SNIHostName(wsInfo.asServerAddress().getHost())));
+
+					// SSLEngine with SSL Parameters for SNI
+					SSLEngine sslEngine = sslCtx.newEngine(ByteBufAllocator.DEFAULT);
+					sslEngine.setSSLParameters(sslParameters);
+
+					// SSL Handler
+					SslHandler sslHandler = new SslHandler(sslEngine);
+
+					pipeline.addAfter("timeout", "WsmcSslHandler", sslHandler);
 				} catch (SSLException e) {
 					e.printStackTrace();
 				}
-
-            	if (sslCtx != null) {
-            		pipeline.addAfter("timeout", "WsmcSslHandler", sslCtx.newHandler(null));
-            	}
-        	}
-        }
+			}
+		}
 	}
 
 	@Override

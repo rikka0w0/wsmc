@@ -1,2 +1,2 @@
-1. The client side now supports wss (WebSocket secured) connections.
-2. Fix client-side default port for ws and wss connections.
+1. New parameters for Socket data length
+2. Add SNI support
