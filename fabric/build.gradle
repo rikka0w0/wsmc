@@ -12,6 +12,8 @@ loom {
 	mixin {
 		defaultRefmapName = "wsmc.refmap.json"
 	}
+
+	// runs.configureEach { vmArgs("-Dwsmc.debug=true") }
 }
 
 dependencies {
