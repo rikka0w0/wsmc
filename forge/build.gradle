@@ -6,15 +6,12 @@ plugins {
 	id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-// Load the common property
-Properties props = new Properties();
-props.load(new FileInputStream("$project.rootDir/../fabric/gradle.properties"));
-props.each {prop -> project.ext.set(prop.key, prop.value)};
+apply from: '../common.gradle'
 
 project.ext.mod_id = project.archives_base_name;
 project.ext.minecraft_version_range = '[' + project.minecraft_version_min + ', ' + project.minecraft_version_max + ')';
 
-// These are defined in ../fabric/gradle.properties
+// These are defined in ../common.properties
 version = project.mod_version
 group = project.dev_group // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = project.archives_base_name
@@ -72,13 +69,6 @@ minecraft {
         server {
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
-        }
-
-        data {
-            workingDirectory project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', mod_id, '--all', '--output', file('../src/generated/resources/'), '--existing', file('../src/main/resources/'), '--existing', file('src/main/resources/')
         }
     }
 }

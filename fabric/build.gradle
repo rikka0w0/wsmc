@@ -3,6 +3,8 @@ plugins {
 	id 'maven-publish'
 }
 
+apply from: '../common.gradle'
+
 repositories {
     // Modmenu dev
     maven { url 'https://maven.terraformersmc.com/releases/' }
