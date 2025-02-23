@@ -101,7 +101,7 @@ public class WebSocketConnectionInfo {
 			if (hostname == null)
 				return null;
 
-			hostname = IDN.toASCII(hostname);
+			IDN.toASCII(hostname);
 
 			if (scheme == null)
 				return null;
