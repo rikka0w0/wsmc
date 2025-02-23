@@ -1,5 +1,7 @@
 package wsmc.mixin;
 
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,11 +11,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.google.common.base.Objects;
 import com.google.common.net.HostAndPort;
 
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import wsmc.IWebSocketServerAddress;
+import wsmc.WebSocketConnectionInfo;
 
 @Debug(export = true)
 @Mixin(ServerAddress.class)
@@ -23,34 +25,28 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 	private HostAndPort hostAndPort;
 
 	@Unique
-	private String scheme = null;
-
-	@Unique
-	private String path = null;
+	@Nullable
+	private WebSocketConnectionInfo connInfo;
 
 	@Override
-	public void setSchemeAndPath(String scheme, String path) {
-		this.path = path;
-		this.scheme = scheme;
+	public void setWsConnectionInfo(@Nullable WebSocketConnectionInfo connInfo) {
+		this.connInfo = connInfo;
 	}
 
 	@Override
-	public String getPath() {
-		return this.path;
+	public WebSocketConnectionInfo getWsConnectionInfo() {
+		return this.connInfo;
 	}
 
 	@Override
-	public String getScheme() {
-		return this.scheme;
+	public String getRawHost() {
+		return hostAndPort.getHost();
 	}
 
 	@Inject(at = @At("HEAD"), method = "toString", cancellable = true)
 	private void toStringCustom(CallbackInfoReturnable<String> callback) {
 		if (!this.isVanilla()) {
-			// Skip vanilla logic if scheme is non-null
-			String hostName = this.asServerAddress().getHost();
-			int port = this.asServerAddress().getPort();
-			callback.setReturnValue(this.scheme + "://" + hostName + ":" + port + this.path);
+			callback.setReturnValue(this.connInfo.toString());
 		}
 	}
 
@@ -80,8 +76,10 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 			if (object instanceof IWebSocketServerAddress) {
 				IWebSocketServerAddress ws = (IWebSocketServerAddress) object;
 
-				// Scheme and path must equal
-				if (!ws.getScheme().equalsIgnoreCase(scheme) || !ws.getPath().equalsIgnoreCase(path))
+				if (ws.isVanilla())
+					callback.setReturnValue(false);
+
+				if (!this.connInfo.equalTo(ws.getWsConnectionInfo()))
 					callback.setReturnValue(false);
 
 				// Let vanilla code check for hostAndPort
@@ -95,22 +93,22 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 	@Inject(at = @At("HEAD"), method = "hashCode", cancellable = true)
 	private void hashCodeCustom(CallbackInfoReturnable<Integer> callback) {
 		if (!this.isVanilla()) {
-			// We are modded, cover scheme and path in the hash
-			int hash = Objects.hashCode(this.hostAndPort, this.scheme, this.path);
+			// We are modded, cover hostname, port, and connInfo in the hash
+			int hash = this.getWsConnectionInfo().hashCode();
 			callback.setReturnValue(hash);
 		}
 	}
 
 	@Inject(at = @At("HEAD"), method = "parseString", cancellable = true)
 	private static void parseString(String uriString, CallbackInfoReturnable<ServerAddress> callback) {
-		ServerAddress serverAddress = IWebSocketServerAddress.fromWsUri(uriString);
+		ServerAddress serverAddress = WebSocketConnectionInfo.fromWsUri(uriString);
 		if (serverAddress != null)
 			callback.setReturnValue(serverAddress);
 	}
 
 	@Inject(at = @At("HEAD"), method = "isValidAddress", cancellable = true)
 	private static void isValidAddress(String uriString, CallbackInfoReturnable<Boolean> callback) {
-		if (IWebSocketServerAddress.fromWsUri(uriString) != null)
+		if (WebSocketConnectionInfo.fromWsUri(uriString) != null)
 			callback.setReturnValue(true);
 	}
 }

@@ -68,8 +68,7 @@ public class WebSocketClientHandler extends WebSocketHandler {
 			return null;
 
 		try {
-			URI uri = new URI(wsInfo.getScheme(), null, wsInfo.asServerAddress().getHost(),
-					wsInfo.asServerAddress().getPort(), wsInfo.getPath(), null, null);
+			URI uri = wsInfo.getWsConnectionInfo().toURI();
 
 			return new WebSocketClientHandler(uri);
 		} catch (URISyntaxException e) {
@@ -86,7 +85,7 @@ public class WebSocketClientHandler extends WebSocketHandler {
 			pipeline.addAfter("WsmcHttpAggregator", "WsmcCompressionHandler", WebSocketClientCompressionHandler.INSTANCE);
 			pipeline.addAfter("WsmcCompressionHandler", "WsmcWebSocketClientHandler", handler);
 
-			if ("wss".equalsIgnoreCase(wsInfo.getScheme())) {
+			if ("wss".equalsIgnoreCase(wsInfo.getWsConnectionInfo().scheme)) {
 				try {
 					SslContext sslCtx = SslContextBuilder.forClient()
 							.trustManager(InsecureTrustManagerFactory.INSTANCE).build();
