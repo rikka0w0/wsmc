@@ -18,7 +18,7 @@ import wsmc.IWebSocketServerAddress;
 @Mixin(ServerStatusPinger.class)
 public class MixinServerStatusPinger {
 	@Inject(method = "pingServer", locals = LocalCapture.CAPTURE_FAILHARD, require = 1, at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/network/Connection;connectToServer(Ljava/net/InetSocketAddress;Z)Lnet/minecraft/network/Connection;"))
+			target = "Lnet/minecraft/network/Connection;connectToServer(Ljava/net/InetSocketAddress;ZLnet/minecraft/util/SampleLogger;)Lnet/minecraft/network/Connection;"))
 	public void beforeCallConnect(ServerData serverData, Runnable runnable, CallbackInfo callback,
 			ServerAddress serverAddress) {
 		IWebSocketServerAddress wsAddress = IWebSocketServerAddress.from(serverAddress);

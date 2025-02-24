@@ -1,4 +1,9 @@
-Allow client to specify http hostname and SNI
+Port feature from 1.20.1 branch
+
+1. Move to new building system
+2. Support maxFramePayloadLength
+3. Properly support SSL
+4. Allow client to specify http hostname and SNI
 
 Syntax are shown below. Port and path can be appended if necessary.
 The most simple WebSocket connection:
