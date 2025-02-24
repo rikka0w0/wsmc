@@ -69,6 +69,7 @@ for (int i = 0; i < knownMcVers.size(); i++) {
 
 // Prefix of the release file
 project.ext.publish_prefix = (minSupportedVersion == maxSupportedVersion) ? minSupportedVersion : "${minSupportedVersion}-${maxSupportedVersion}";
+project.ext.publish_prefix = project.ext.publish_prefix + '-' + project.ext.mod_version;
 
 // Define a custom task to dump properties
 task exportProperties {
