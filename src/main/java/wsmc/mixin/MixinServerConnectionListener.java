@@ -20,8 +20,9 @@ import wsmc.IConnectionEx;
 public class MixinServerConnectionListener {
 	@Inject(at = @At("RETURN"), method = "initChannel", locals = LocalCapture.CAPTURE_FAILHARD, require = 1)
 	private void initChannel(Channel channel, CallbackInfo callback,
-			ChannelPipeline pipeline, int maxPacketPerSecond, Connection connection) {
+			int maxPacketPerSecond, Connection connection) {
 		IConnectionEx connectionEx = (IConnectionEx) connection;
+		ChannelPipeline pipeline = channel.pipeline();
 
 		// Server side
 		pipeline.addAfter("timeout", "WsmcHttpGetSniffer", new HttpGetSniffer(connectionEx::setWsHandshakeRequest));

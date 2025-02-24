@@ -43,7 +43,7 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 		return hostAndPort.getHost();
 	}
 
-	@Inject(at = @At("HEAD"), method = "toString", require = 1, cancellable = true)
+	@Inject(at = @At("HEAD"), method = "toString", cancellable = true)
 	private void toStringCustom(CallbackInfoReturnable<String> callback) {
 		if (!this.isVanilla()) {
 			callback.setReturnValue(this.connInfo.toString());

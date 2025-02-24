@@ -1,7 +1,5 @@
 package wsmc.mixin;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Final;
@@ -13,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import wsmc.IWebSocketServerAddress;
 
@@ -26,7 +23,7 @@ public class MixinConnectScreen {
 
 	@Inject(at = @At("HEAD"), method = "connect", require = 1, cancellable = true)
 	private void connect(final Minecraft mc, final ServerAddress serverAddress,
-			@Nullable final ServerData serverData, CallbackInfo callback) {
+			CallbackInfo callback) {
 		if (!IWebSocketServerAddress.from(serverAddress).isVanilla())
 			LOGGER.info("Connecting to Websocket server: " + serverAddress.toString());
 	}
