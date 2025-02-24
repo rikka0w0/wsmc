@@ -16,40 +16,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Get Info and Perform Substitutions
-      run: |
-        # Parse fabric/gradle.properties into key-value pairs
-        function parse_gradle_props() {
-          RETURNVAL=$(grep -v '^\s*#' $1 | sed -e 's/^[ \t]*//;s/[ \t]*$//' | sed -e 's/[ \t]*=[ \t]*/=/' | grep -E -v '^[^=]*\.[^=]*=')
-          echo "$RETURNVAL"
-        }
-        GRADLE_PROPS=$(parse_gradle_props fabric/gradle.properties)
-        GRADLE_PROPS+=$(parse_gradle_props forge/gradle.properties)
-
-        # Parse each line of the key-value pairs
-        VAR_NAMES=()
-        echo "Add the following to the environmental variables of this step:"
-        while IFS= read -r line; do
-          # Skip empty lines
-          [[ "$line" == "" ]] && continue
-
-          key=$(echo "$line" | cut -d= -f1)
-          value=$(echo "$line" | cut -d= -f2-)
-
-          VAR_NAMES+=("$key")
-          export "$key"="$value"
-          echo "$key"="$value"
-        done <<< "$GRADLE_PROPS"
-
-        # Generate dynamic strings based on the build configuration
-        function set_action_env() {
-          echo "$1"="$2" >> $GITHUB_ENV
-        }
-        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge and Fabric ${minecraft_version}"
-        set_action_env "GITHUB_TAG_NAME" "${mod_version}_${minecraft_version}"
-        set_action_env "CURSEFORGE_FORGE" "${minecraft_version}-${mod_version}-forge"
-        set_action_env "CURSEFORGE_FABRIC" "${minecraft_version}-${mod_version}-fabric"
-
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -64,7 +30,40 @@ jobs:
       run: cd forge && ./gradlew clean build && cd ..
 
     - name: Build Fabric
-      run: cd fabric && ./gradlew clean build && cd ..
+      run: cd fabric && ./gradlew clean exportProperties build && cd ..
+
+    - name: Get Info and Perform Substitutions
+      run: |
+        # Parse common.properties into key-value pairs
+        function parse_gradle_props() {
+          RETURNVAL=$(grep -v '^\s*#' $1 | sed -e 's/^[ \t]*//;s/[ \t]*$//' | sed -e 's/[ \t]*=[ \t]*/=/' | grep -E -v '^[^=]*\.[^=]*=')
+          echo "$RETURNVAL"
+        }
+        PROPS=$(parse_gradle_props fabric/build/info/properties.txt)
+
+        # Parse each line of the key-value pairs
+        VAR_NAMES=()
+        echo "Add the following to the environmental variables of this step:"
+        while IFS= read -r line; do
+          # Skip empty lines
+          [[ "$line" == "" ]] && continue
+
+          key=$(echo "$line" | cut -d= -f1)
+          value=$(echo "$line" | cut -d= -f2-)
+
+          VAR_NAMES+=("$key")
+          export "$key"="$value"
+          echo "$key"="$value"
+        done <<< "$PROPS"
+
+        # Generate dynamic strings based on the build configuration
+        function set_action_env() {
+          echo "$1"="$2" >> $GITHUB_ENV
+        }
+        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge and Fabric ${enumeratedMcVersions}"
+        set_action_env "GITHUB_TAG_NAME" "${mod_version}_${minecraft_version}"
+        set_action_env "CURSEFORGE_FORGE" "${minecraft_version}-${mod_version}-forge"
+        set_action_env "CURSEFORGE_FABRIC" "${minecraft_version}-${mod_version}-fabric"
 
     - name: Publish to GitHub
       uses: Kir-Antipov/mc-publish@v3.3

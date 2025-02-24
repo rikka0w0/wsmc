@@ -1,2 +1,24 @@
-1. New parameters for Socket data length
-2. Add SNI support
+Allow client to specify http hostname and SNI
+
+Syntax are shown below. Port and path can be appended if necessary.
+The most simple WebSocket connection:
+ws://ip.ip.ip.ip
+
+Websocket connection with http hostname specified:
+ws://host.com@ip.ip.ip.ip
+
+The most simple secured WebSocket connection:
+wss://sni-host-ip.com
+
+Specify sni and http hostname to the same value(sni-host.com), resolve
+server IP from ip.ip.ip.ip:
+wss://sni-host.com@ip.ip.ip.ip
+
+Set sni and http hostname differently, resolve server IP from host.com:
+wss://sni.com:@host.com[:port]
+
+Set sni and http hostname differently, resolve server IP from sni.com:
+wss://:host.com@sni.com[:port]
+
+Set sni, http hostname, and the server address seperately
+wss://sni.com:host.com@ip.ip.ip.ip

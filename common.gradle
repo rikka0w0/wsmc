@@ -84,3 +84,14 @@ project.ext.set('enumeratedMcVersions', project.hasProperty('minecraft_versions_
 	enumerateVersions(project.minecraft_version_min, project.minecraft_version));
 println 'The following Minecraft versions will be DECLARED as supported:'
 project.enumeratedMcVersions.each { println it };
+
+// Define a custom task to dump properties
+task exportProperties {
+	outputs.file file("$buildDir/info/properties.txt")
+	doLast {
+		outputs.files.singleFile.withWriter { writer -> {
+			mergedProperties.each { key, value -> writer.writeLine("${key}=${value}"); }
+			writer.writeLine("enumeratedMcVersions=${project.enumeratedMcVersions.join(', ')}");
+		}}
+	}
+}
