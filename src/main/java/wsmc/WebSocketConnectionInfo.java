@@ -21,47 +21,55 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
  */
 public class WebSocketConnectionInfo {
 	public final ServerAddress owner;
-	public final String path;
-	public final String scheme;
+	public final URI uri;
+	public final String sni;
+	public final String httpHostname;
 
-	private WebSocketConnectionInfo(ServerAddress owner, String scheme, String path) {
+	private WebSocketConnectionInfo(ServerAddress owner, URI uri,
+		String sni, String httpHostname
+	) {
 		this.owner = owner;
-		this.scheme = scheme;
-		this.path = path;
+		this.uri = uri;
+		this.sni = sni;
+		this.httpHostname = httpHostname;
 	}
 
 	/**
-	 * Compare our unique fields only.
+	 * Compare URI components, sni and httpHostname.
 	 * <p>
 	 * Does not check the owner ({@link ServerAddress}).
 	 * <p>
 	 * Vanilla ServerAddress checks Host and port.
 	 */
-	public boolean equalTo(WebSocketConnectionInfo other) {
-		if (other == null)
+	public boolean equalTo(WebSocketConnectionInfo that) {
+		if (that == null)
 			return false;
 
-		if (!this.path.equals(other.path))
+		if (!Objects.equal(this.uri, that.uri))
 			return false;
 
-		if (!this.scheme.equals(other.scheme))
+		if (!Objects.equal(this.sni, that.sni))
+			return false;
+
+		if (!Objects.equal(this.httpHostname, that.httpHostname))
 			return false;
 
 		return true;
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object){
+	public boolean equals(Object that) {
+		if (this == that){
 			return true;
-		} else if (!(object instanceof WebSocketConnectionInfo)){
+		} else if (!(that instanceof WebSocketConnectionInfo)){
 			return false;
 		}
 
-		WebSocketConnectionInfo other = (WebSocketConnectionInfo) object;
+		WebSocketConnectionInfo other = (WebSocketConnectionInfo) that;
 
 		// Check vanilla fields
-		if (!this.owner.getHost().equals(other.owner.getHost()))
+		if (!IWebSocketServerAddress.from(this.owner).getRawHost().equals(
+				IWebSocketServerAddress.from(other.owner).getRawHost()))
 			return false;
 
 		if (this.owner.getPort() != other.owner.getPort())
@@ -74,19 +82,29 @@ public class WebSocketConnectionInfo {
 	public int hashCode() {
 		return Objects.hashCode(
 			this.owner.getPort(),
-			this.owner.getHost(),
-			this.scheme,
-			this.path);
+			IWebSocketServerAddress.from(this.owner).getRawHost(),
+			this.uri,
+			this.sni,
+			this.httpHostname);
 	}
 
 	@Override
 	public String toString() {
-		IWebSocketServerAddress wsInfo = IWebSocketServerAddress.from(this.owner);
-		return this.scheme + "://" + wsInfo.getRawHost() + ":" + this.owner.getPort() + this.path;
+		return this.uri.toString() + "\n" +
+			"TLS SNI: " + this.sni + "\n" +
+			"HTTP Hostname: " + this.httpHostname;
+	}
+
+	private static String[] splitUserInfo(@Nullable String userInfo) {
+		if (null == userInfo)
+			return new String[0];
+
+		// Split the UserInfo string, preserve empty strings
+		return userInfo.split(":", -1);
 	}
 
 	/**
-	 *
+	 * syntax: (wss|ws)://sni.com:host.com@ip.ip.ip.ip[:port][/path]
 	 * @param uriString
 	 * @return null if uriString is not a valid WebSocket Uri (including vanilla TCP).
 	 */
@@ -130,30 +148,55 @@ public class WebSocketConnectionInfo {
 				path = "/";
 			}
 
+			String sni = null;
+			String hostnameInHeader = null;
+
+			if ("wss".equalsIgnoreCase(scheme)) {
+				sni = hostname;
+				hostnameInHeader = hostname;
+
+				String[] splitted = splitUserInfo(uri.getUserInfo());
+				if (splitted.length > 0) {
+					sni = splitted[0];
+					if (splitted.length == 1) {
+						hostnameInHeader = sni;
+					} else {
+						hostnameInHeader = splitted[1];
+					}
+
+					if (hostnameInHeader.isEmpty()) {
+						hostnameInHeader = hostname;
+						if (sni.isEmpty()) {
+							sni = hostname;
+						}
+					} else if (sni.isEmpty()) {
+						sni = hostname;
+					}
+				}
+			} else if ("ws".equals(scheme)) {
+				hostnameInHeader = hostname;
+
+				String[] splitted = splitUserInfo(uri.getUserInfo());
+				if (splitted.length > 0 && !splitted[0].isBlank())
+					hostnameInHeader = splitted[0];
+			}
+
+			uri = new URI(
+				scheme,
+				null,
+				hostname,
+				port,
+				path,
+				uri.getQuery(),
+				uri.getFragment());
+
 			ServerAddress result = new ServerAddress(hostname, port);
-			WebSocketConnectionInfo connInfo = new WebSocketConnectionInfo(result, scheme, path);
+			WebSocketConnectionInfo connInfo = new WebSocketConnectionInfo(result, uri, sni, hostnameInHeader);
 			((IWebSocketServerAddress)(Object)result).setWsConnectionInfo(connInfo);
 			return result;
 		} catch (URISyntaxException e) {
 		}
 
 		return null;
-	}
-
-	public URI toURI() throws URISyntaxException {
-		IWebSocketServerAddress wsInfo = IWebSocketServerAddress.from(this.owner);
-		String hostName = wsInfo.getRawHost();
-		int port = this.owner.getPort();
-
-		URI uri = new URI(
-			this.scheme,
-			null,
-			hostName,
-			port,
-			this.path,
-			null,
-			null);
-
-		return uri;
 	}
 }

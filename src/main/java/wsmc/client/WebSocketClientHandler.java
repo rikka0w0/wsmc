@@ -1,7 +1,6 @@
 package wsmc.client;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 
 import javax.net.ssl.SNIHostName;
@@ -32,6 +31,7 @@ import io.netty.util.CharsetUtil;
 
 import wsmc.IWebSocketServerAddress;
 import wsmc.WSMC;
+import wsmc.WebSocketConnectionInfo;
 import wsmc.WebSocketHandler;
 
 public class WebSocketClientHandler extends WebSocketHandler {
@@ -44,7 +44,7 @@ public class WebSocketClientHandler extends WebSocketHandler {
 	 */
 	public final static String maxFramePayloadLength = System.getProperty("wsmc.maxFramePayloadLength", "65536");
 
-	public WebSocketClientHandler(URI uri) {
+	public WebSocketClientHandler(URI uri, String httpHostname) {
 		super("S->C", "C->S");
 
 		int maxFramePayloadLength = 65536;
@@ -55,44 +55,36 @@ public class WebSocketClientHandler extends WebSocketHandler {
 			WSMC.debug("Unable to parse maxFramePayloadLength, value: " + WebSocketClientHandler.maxFramePayloadLength);
 		}
 
+		DefaultHttpHeaders headers = new DefaultHttpHeaders();
+		headers.set("Host", httpHostname);
+
         // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
         // If you change it to V00, ping is not supported and remember to change
         // HttpResponseDecoder to WebSocketHttpResponseDecoder in the pipeline.
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri,
-				WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), maxFramePayloadLength);
-	}
-
-	public static WebSocketClientHandler fromServerData(IWebSocketServerAddress wsInfo) {
-		// Do not perform WebSocket handshake for vanilla TCP Minecraft
-		if (wsInfo == null || wsInfo.isVanilla())
-			return null;
-
-		try {
-			URI uri = wsInfo.getWsConnectionInfo().toURI();
-
-			return new WebSocketClientHandler(uri);
-		} catch (URISyntaxException e) {
-			return null;
-		}
+				WebSocketVersion.V13, null, true, headers, maxFramePayloadLength);
 	}
 
 	public static void hookPipeline(ChannelPipeline pipeline, IWebSocketServerAddress wsInfo) {
-		final WebSocketClientHandler handler = WebSocketClientHandler.fromServerData(wsInfo);
+		// Do not perform WebSocket handshake for vanilla TCP Minecraft
+		if (wsInfo != null && !wsInfo.isVanilla()) {
+			WebSocketConnectionInfo connInfo = wsInfo.getWsConnectionInfo();
+			final WebSocketClientHandler handler = new WebSocketClientHandler(connInfo.uri, connInfo.httpHostname);
+			WSMC.info("Connecting to WebSocket Server:\n" + connInfo.toString());
 
-		if (handler != null) {
 			pipeline.addAfter("timeout", "WsmcHttpClient", new HttpClientCodec());
 			pipeline.addAfter("WsmcHttpClient", "WsmcHttpAggregator", new HttpObjectAggregator(8192*4));
 			pipeline.addAfter("WsmcHttpAggregator", "WsmcCompressionHandler", WebSocketClientCompressionHandler.INSTANCE);
 			pipeline.addAfter("WsmcCompressionHandler", "WsmcWebSocketClientHandler", handler);
 
-			if ("wss".equalsIgnoreCase(wsInfo.getWsConnectionInfo().scheme)) {
+			if ("wss".equalsIgnoreCase(connInfo.uri.getScheme())) {
 				try {
 					SslContext sslCtx = SslContextBuilder.forClient()
 							.trustManager(InsecureTrustManagerFactory.INSTANCE).build();
 
 					// SSL Parameters to set SNI TLS Extension
 					SSLParameters sslParameters = new SSLParameters();
-					sslParameters.setServerNames(Collections.singletonList(new SNIHostName(wsInfo.asServerAddress().getHost())));
+					sslParameters.setServerNames(Collections.singletonList(new SNIHostName(connInfo.sni)));
 
 					// SSLEngine with SSL Parameters for SNI
 					SSLEngine sslEngine = sslCtx.newEngine(ByteBufAllocator.DEFAULT);

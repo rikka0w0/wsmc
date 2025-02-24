@@ -28,6 +28,29 @@ This mod runs standalone and does not have any dependency.
 * The server can still get the real IP of the players who joined via CDN-proxied WebSocket.
 * This mod is compatible with other TCP-WebSocket proxies, such as websocat.
 
+## Client Options
+Sometimes the DNS returns a slow IP for the HTTP hostname (ws) or the SNI (wss). The client may want to control how to resolve the IP address.
+
+The client can optionally control the HTTP hostname and the SNI used during WebSocket handshake:
+```
+Insecure WebSocket connection with http hostname specified:
+ws://host.com@ip.ip.ip.ip
+
+Specify sni and http hostname to the same value(sni-host.com), resolve server IP from ip.ip.ip.ip:
+wss://sni-host.com@ip.ip.ip.ip
+
+Set sni and http hostname differently, resolve server IP from host.com:
+wss://sni.com:@host.com[:port]
+
+Set sni and http hostname differently, resolve server IP from sni.com:
+wss://:host.com@sni.com[:port]
+
+Set sni, http hostname, and the server address seperately
+wss://sni.com:host.com@ip.ip.ip.ip
+```
+
+Port and path specification can be appended at the same time.
+
 ## Configuration
 The configuration of this mod is passed in the "system properties". You can use `-D` in the JVM command line to pass such options.
 

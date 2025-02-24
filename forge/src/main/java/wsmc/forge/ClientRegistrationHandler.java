@@ -11,6 +11,9 @@ import wsmc.WSMC;
 public class ClientRegistrationHandler {
 	@SubscribeEvent
 	public static void onClientSetup(final FMLClientSetupEvent event) {
+		if (!WSMC.debug())
+			return;
 
+		wsmc.UnitTest.testParser();
 	}
 }
