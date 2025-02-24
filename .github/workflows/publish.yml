@@ -3,9 +3,14 @@ name: Build and Publish
 on:
   workflow_dispatch:
 
+env:
+  java-version: '17'
+  curseforge-id: 920581
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
       packages: write
@@ -16,21 +21,32 @@ jobs:
       with:
         submodules: true
 
-    - name: Set up JDK 17
+    - name: Set up JDK ${{ env.java-version }}
       uses: actions/setup-java@v3
       with:
-        java-version: '17'
+        java-version: ${{ env.java-version }}
         distribution: 'temurin'
 
-    - name: Make Gradle Wrapper Executable
-      if: ${{ runner.os != 'Windows' }}
-      run: chmod +x ./forge/gradlew && chmod +x ./fabric/gradlew
-
-    - name: Build Forge
-      run: cd forge && ./gradlew clean build && cd ..
-
     - name: Build Fabric
-      run: cd fabric && ./gradlew clean exportProperties build && cd ..
+      run: |
+        cd fabric
+        chmod +x ./gradlew
+        ./gradlew exportProperties build
+        cd ..
+
+    - name: Build neoforge
+      run: |
+        cd neoforge
+        chmod +x ./gradlew
+        ./gradlew exportProperties build
+        cd ..
+
+    - name: Build forge
+      run: |
+        cd forge
+        chmod +x ./gradlew
+        ./gradlew exportProperties build
+        cd ..
 
     - name: Get Info and Perform Substitutions
       run: |
@@ -39,31 +55,55 @@ jobs:
           RETURNVAL=$(grep -v '^\s*#' $1 | sed -e 's/^[ \t]*//;s/[ \t]*$//' | sed -e 's/[ \t]*=[ \t]*/=/' | grep -E -v '^[^=]*\.[^=]*=')
           echo "$RETURNVAL"
         }
-        PROPS=$(parse_gradle_props fabric/build/info/properties.txt)
 
-        # Parse each line of the key-value pairs
-        VAR_NAMES=()
-        echo "Add the following to the environmental variables of this step:"
-        while IFS= read -r line; do
-          # Skip empty lines
-          [[ "$line" == "" ]] && continue
+        # Get the value of a key from a set of key-value pairs
+        get_prop_value() {
+          local props="$1"
+          local search_key="$2"
 
-          key=$(echo "$line" | cut -d= -f1)
-          value=$(echo "$line" | cut -d= -f2-)
+          while IFS= read -r line; do
+            # Skip empty lines
+            [[ -z "$line" ]] && continue
 
-          VAR_NAMES+=("$key")
-          export "$key"="$value"
-          echo "$key"="$value"
-        done <<< "$PROPS"
+            key=$(echo "$line" | cut -d= -f1)
+            value=$(echo "$line" | cut -d= -f2-)
+
+            if [[ "$key" == "$search_key" ]]; then
+              echo "$value"
+              return 0
+            fi
+          done <<< "$props"
+
+          return 1 # Return non-zero if key is not found
+        }
 
         # Generate dynamic strings based on the build configuration
         function set_action_env() {
           echo "$1"="$2" >> $GITHUB_ENV
         }
-        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge and Fabric ${enumeratedMcVersions}"
+
+        PROPS=$(parse_gradle_props fabric/build/info/properties.txt)
+        mod_version=$(get_prop_value "$PROPS" "mod_version")
+        minecraft_versions_declared=$(get_prop_value "$PROPS" "minecraft_versions_declared")
+        minecraft_version=$(get_prop_value "$PROPS" "minecraft_version")
+        publish_prefix=$(get_prop_value "$PROPS" "publish_prefix")
+        minecraft_version_range=$(get_prop_value "$PROPS" "minecraft_version_range")
+        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge, Neoforge, and Fabric ${minecraft_versions_declared}"
         set_action_env "GITHUB_TAG_NAME" "${mod_version}_${minecraft_version}"
-        set_action_env "CURSEFORGE_FORGE" "${minecraft_version}-${mod_version}-forge"
-        set_action_env "CURSEFORGE_FABRIC" "${minecraft_version}-${mod_version}-fabric"
+        set_action_env "CURSEFORGE_FABRIC" "${publish_prefix}-fabric"
+        set_action_env "MC_RANGE_FABRIC" "${minecraft_version_range}"
+
+        PROPS=$(parse_gradle_props neoforge/build/info/properties.txt)
+        publish_prefix=$(get_prop_value "$PROPS" "publish_prefix")
+        minecraft_version_range=$(get_prop_value "$PROPS" "minecraft_version_range")
+        set_action_env "CURSEFORGE_NEOFORGE" "${publish_prefix}-neoforge"
+        set_action_env "MC_RANGE_NEOFORGE" "${minecraft_version_range}"
+
+        PROPS=$(parse_gradle_props forge/build/info/properties.txt)
+        publish_prefix=$(get_prop_value "$PROPS" "publish_prefix")
+        minecraft_version_range=$(get_prop_value "$PROPS" "minecraft_version_range")
+        set_action_env "CURSEFORGE_FORGE" "${publish_prefix}-forge"
+        set_action_env "MC_RANGE_FORGE" "${minecraft_version_range}"
 
     - name: Publish to GitHub
       uses: Kir-Antipov/mc-publish@v3.3
@@ -75,7 +115,7 @@ jobs:
         github-tag: ${{ env.GITHUB_TAG_NAME }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         github-draft: false
-        github-prerelease: true
+        github-prerelease: false
 
         files: |
           forge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
@@ -86,23 +126,40 @@ jobs:
       with:
         changelog-file: CHANGELOG.txt
         # Only include this section if you wish to publish your assets on CurseForge.
-        curseforge-id: 920581
+        curseforge-id: ${{ env.curseforge-id }}
         curseforge-token: "${{ secrets.CURSEFORGE_TOKEN }}"
 
         name: ${{ env.CURSEFORGE_FABRIC }}
+        game-versions: "${{ env.MC_RANGE_FABRIC }}"
         version-type: release
         files: fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
-        java: Java 17
+        java: Java ${{ env.java-version }}
+
+    - name: Publish to CurseForge (Neoforge version)
+      uses: Kir-Antipov/mc-publish@v3.3
+      with:
+        changelog-file: CHANGELOG.txt
+        # Only include this section if you wish to publish your assets on CurseForge.
+        curseforge-id: ${{ env.curseforge-id }}
+        curseforge-token: "${{ secrets.CURSEFORGE_TOKEN }}"
+
+        name: ${{ env.CURSEFORGE_NEOFORGE }}
+        game-versions: "${{ env.MC_RANGE_NEOFORGE }}"
+        loaders: neoforge
+        version-type: beta
+        files: neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
+        java: Java ${{ env.java-version }}
 
     - name: Publish to CurseForge (Forge version)
       uses: Kir-Antipov/mc-publish@v3.3
       with:
         changelog-file: CHANGELOG.txt
         # Only include this section if you wish to publish your assets on CurseForge.
-        curseforge-id: 920581
+        curseforge-id: ${{ env.curseforge-id }}
         curseforge-token: "${{ secrets.CURSEFORGE_TOKEN }}"
 
         name: ${{ env.CURSEFORGE_FORGE }}
+        game-versions: "${{ env.MC_RANGE_FORGE }}"
         version-type: beta
         files: forge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
-        java: Java 17
+        java: Java ${{ env.java-version }}

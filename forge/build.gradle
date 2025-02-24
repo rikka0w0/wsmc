@@ -9,7 +9,6 @@ plugins {
 apply from: '../common.gradle'
 
 project.ext.mod_id = project.archives_base_name;
-project.ext.minecraft_version_range = '[' + project.minecraft_version_min + ', ' + project.minecraft_version_max + ')';
 
 // These are defined in ../common.properties
 version = project.mod_version

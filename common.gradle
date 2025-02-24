@@ -6,6 +6,7 @@ mergedProperties.load(new FileInputStream("$project.rootDir/gradle.properties"))
 mergedProperties.each { prop -> project.ext.set(prop.key, prop.value); }
 
 project.ext.set("mergedProperties", mergedProperties)
+project.ext.minecraft_version_range = '[' + project.minecraft_version_min + ', ' + project.minecraft_version_max + ')';
 
 // Load secrete tokens
 defaultIfNotExist('curseforgeApiToken', System.getenv("CURSEFORGE_TOKEN"))
@@ -40,50 +41,34 @@ def compareVersions(version1, version2) {
 	return 0
 }
 
-/**
- * @param version1 a version string that looks like "1.21" or "1.20.4"
- * @param version2 a version string that looks like "1.21" or "1.20.4"
- * @return a string array that contains all versions between [version1, version2], inclusive.
- */
-def enumerateVersions(version1, version2) {
-	def startMcVersion = normalizeVersion(version1);
-	def endMcVersion = normalizeVersion(version2);
-	// Make sure startMcVersion <= endMcVersion
-	if (compareVersions(startMcVersion, endMcVersion) > 0) {
-		def temp = startMcVersion;
-		startMcVersion = endMcVersion;
-		endMcVersion = temp;
-	}
-	def currentVersion = startMcVersion.clone();
+println 'The following Minecraft versions will be DECLARED as supported:'
+def lowerBound = normalizeVersion(project.minecraft_version_min);
+def upperBound = normalizeVersion(project.minecraft_version_max);
+def knownMcVers = mergedProperties.minecraft_versions_declared.split(',').collect { it.trim() };
+def minSupportedVersion = null;
+def maxSupportedVersion = null;
+project.ext.minecraft_versions_supported = [];
+for (int i = 0; i < knownMcVers.size(); i++) {
+	def versionString = knownMcVers[i];
+	def version = normalizeVersion(versionString);
 
-	def enumeratedVersions = [];
-	while (true) {
-		if (currentVersion[2] == 0) {
-			enumeratedVersions << currentVersion.take(2).join('.');
-		} else {
-			enumeratedVersions << currentVersion.join('.');
+	// Check if version is within the range
+	if (compareVersions(version, lowerBound) >= 0 && compareVersions(version, upperBound) < 0) {
+		project.ext.minecraft_versions_supported.add(versionString);
+		println(versionString);
+		
+		if (minSupportedVersion == null || compareVersions(version, normalizeVersion(minSupportedVersion)) < 0) {
+			minSupportedVersion = versionString;
 		}
 
-		if (currentVersion == endMcVersion) break;
-		currentVersion[2]++;
-		if (currentVersion[2] == 10) {
-			currentVersion[2] = 0;
-			currentVersion[1]++;
-			if (currentVersion[1] == 10) {
-				currentVersion[1] = 0;
-				currentVersion[0]++;
-			}
+		if (maxSupportedVersion == null || compareVersions(version, normalizeVersion(maxSupportedVersion)) > 0) {
+			maxSupportedVersion = versionString;
 		}
 	}
-
-	return enumeratedVersions;
 }
 
-project.ext.set('enumeratedMcVersions', project.hasProperty('minecraft_versions_declared') ?
-	project.minecraft_versions_declared.split(',').collect { it.trim() } :
-	enumerateVersions(project.minecraft_version_min, project.minecraft_version));
-println 'The following Minecraft versions will be DECLARED as supported:'
-project.enumeratedMcVersions.each { println it };
+// Prefix of the release file
+project.ext.publish_prefix = (minSupportedVersion == maxSupportedVersion) ? minSupportedVersion : "${minSupportedVersion}-${maxSupportedVersion}";
 
 // Define a custom task to dump properties
 task exportProperties {
@@ -91,7 +76,9 @@ task exportProperties {
 	doLast {
 		outputs.files.singleFile.withWriter { writer -> {
 			mergedProperties.each { key, value -> writer.writeLine("${key}=${value}"); }
-			writer.writeLine("enumeratedMcVersions=${project.enumeratedMcVersions.join(', ')}");
+			writer.writeLine("minecraft_version_range=${project.minecraft_version_range}");
+			writer.writeLine("minecraft_versions_supported=${project.minecraft_versions_supported.join(', ')}");
+			writer.writeLine("publish_prefix=${project.publish_prefix}");
 		}}
 	}
 }
