@@ -29,7 +29,7 @@ public class MixinConnection implements IConnectionEx {
 	 * Prior to the invocation of connectToServer(), call {@link wsmc.ArgHolder.connectToServerArg.push}
 	 * to get the ServerAddress-sensitive(IWebSocketServerAddress) version of connectToServer().
 	 */
-	@Inject(method = "connectToServer", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE",
+	@Inject(method = "connectToServer", locals = LocalCapture.CAPTURE_FAILHARD, require = 1, at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/network/Connection;connect(Ljava/net/InetSocketAddress;ZLnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;"))
 	private static void beforeCallConnect(InetSocketAddress socketAddress, boolean preferEPoll,
 			CallbackInfoReturnable<Connection> callback, Connection connection) {

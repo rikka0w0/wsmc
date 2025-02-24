@@ -43,14 +43,14 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 		return hostAndPort.getHost();
 	}
 
-	@Inject(at = @At("HEAD"), method = "toString", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "toString", require = 1, cancellable = true)
 	private void toStringCustom(CallbackInfoReturnable<String> callback) {
 		if (!this.isVanilla()) {
 			callback.setReturnValue(this.connInfo.toString());
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "equals", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "equals", require = 1, cancellable = true)
 	private void equalsCustom(Object object, CallbackInfoReturnable<Boolean> callback) {
 		// Redirects the vanilla equals();
 
@@ -90,7 +90,7 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "hashCode", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "hashCode", require = 1, cancellable = true)
 	private void hashCodeCustom(CallbackInfoReturnable<Integer> callback) {
 		if (!this.isVanilla()) {
 			// We are modded, cover hostname, port, and connInfo in the hash
@@ -99,14 +99,14 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "parseString", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "parseString", require = 1, cancellable = true)
 	private static void parseString(String uriString, CallbackInfoReturnable<ServerAddress> callback) {
 		ServerAddress serverAddress = WebSocketConnectionInfo.fromWsUri(uriString);
 		if (serverAddress != null)
 			callback.setReturnValue(serverAddress);
 	}
 
-	@Inject(at = @At("HEAD"), method = "isValidAddress", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "isValidAddress", require = 1, cancellable = true)
 	private static void isValidAddress(String uriString, CallbackInfoReturnable<Boolean> callback) {
 		if (WebSocketConnectionInfo.fromWsUri(uriString) != null)
 			callback.setReturnValue(true);

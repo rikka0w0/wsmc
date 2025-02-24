@@ -18,7 +18,7 @@ import wsmc.IConnectionEx;
 @Debug(export = true)
 @Mixin(targets="net.minecraft.server.network.ServerConnectionListener$1")
 public class MixinServerConnectionListener {
-	@Inject(at = @At("RETURN"), method = "initChannel", locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(at = @At("RETURN"), method = "initChannel", locals = LocalCapture.CAPTURE_FAILHARD, require = 1)
 	private void initChannel(Channel channel, CallbackInfo callback,
 			ChannelPipeline pipeline, int maxPacketPerSecond, Connection connection) {
 		IConnectionEx connectionEx = (IConnectionEx) connection;

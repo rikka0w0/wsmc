@@ -2,14 +2,13 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'maven-publish'
-	id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+	id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
 	id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 apply from: '../common.gradle'
 
 project.ext.mod_id = project.archives_base_name;
-project.ext.minecraft_version_range = '[' + project.minecraft_version_min + ', ' + project.minecraft_version_max + ')';
 
 // These are defined in ../common.properties
 version = project.mod_version

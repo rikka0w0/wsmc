@@ -24,7 +24,7 @@ public class MixinConnectScreen {
 	@Final
 	static Logger LOGGER;
 
-	@Inject(at = @At("HEAD"), method = "connect", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "connect", require = 1, cancellable = true)
 	private void connect(final Minecraft mc, final ServerAddress serverAddress,
 			@Nullable final ServerData serverData, CallbackInfo callback) {
 		if (!IWebSocketServerAddress.from(serverAddress).isVanilla())

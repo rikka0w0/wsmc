@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "wsmc",
-  "version": "${version}",
+  "version": "${mod_version}",
   "name": "WSMC",
   "description": "Websocket wrapper for Minecraft Java",
   "authors": [
@@ -23,7 +23,7 @@
   ],
   "depends": {
     "minecraft": ">=${minecraft_version_min}",
-    "fabricloader": ">=${loader_version}"
+    "fabricloader": ">=${loader_version_min}"
   },
   "suggests": {
     "flamingo": "*"

@@ -48,19 +48,13 @@ group = project.dev_group
 
 processResources {
 	inputs.property "version", project.version
-	def props = [
-		"version": project.version, 
-		"minecraft_version_min": project.minecraft_version_min,
-		"minecraft_version_max": project.minecraft_version_max,
-		"loader_version": project.loader_version
-	]
 
 	filesMatching("fabric.mod.json") {
-		expand props
+		expand project.mergedProperties
 	}
 }
 
-// configure  the source folders
+// configure the source folders
 sourceSets {
     main {
         java {

@@ -25,13 +25,13 @@ public class MixinConnectionChInit {
 	@Unique
 	private Connection connection;
 
-	@Inject(method = "<init>", at = @At("RETURN"))
+	@Inject(method = "<init>", at = @At("RETURN"), require = 1)
 	protected void init(Connection connection, CallbackInfo callback) {
 		// These will remain constant
 		this.connection = connection;
 	}
 
-	@Inject(method = "initChannel", at = @At("RETURN"))
+	@Inject(method = "initChannel", at = @At("RETURN"), require = 1)
 	protected void initChannel(Channel channel, CallbackInfo callback) {
 		IConnectionEx connection = (IConnectionEx) this.connection;
 		IWebSocketServerAddress wsInfo = connection.getWsInfo();

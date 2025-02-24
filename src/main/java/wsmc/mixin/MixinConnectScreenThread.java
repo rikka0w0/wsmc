@@ -27,14 +27,14 @@ public class MixinConnectScreenThread {
 	@Unique
 	private ServerAddress serverAddress;
 
-	@Inject(method = "<init>", at = @At("RETURN"))
+	@Inject(method = "<init>", at = @At("RETURN"), require = 1)
 	protected void init(ConnectScreen connectScreen, String str, ServerAddress serverAddress,
 			Minecraft minecraft, ServerData serverData, CallbackInfo callback) {
 		// This will remain constant
 		this.serverAddress = serverAddress;
 	}
 
-	@Inject(method = "run", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE",
+	@Inject(method = "run", locals = LocalCapture.CAPTURE_FAILHARD, require = 1, at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/network/Connection;connect(Ljava/net/InetSocketAddress;ZLnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;"))
 	public void beforeCallConnect(CallbackInfo callback, InetSocketAddress inetsocketaddress,
 			Optional<InetSocketAddress> optional, Connection connection) {
