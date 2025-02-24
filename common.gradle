@@ -56,7 +56,7 @@ for (int i = 0; i < knownMcVers.size(); i++) {
 	if (compareVersions(version, lowerBound) >= 0 && compareVersions(version, upperBound) < 0) {
 		project.ext.minecraft_versions_supported.add(versionString);
 		println(versionString);
-		
+
 		if (minSupportedVersion == null || compareVersions(version, normalizeVersion(minSupportedVersion)) < 0) {
 			minSupportedVersion = versionString;
 		}
@@ -68,8 +68,8 @@ for (int i = 0; i < knownMcVers.size(); i++) {
 }
 
 // Prefix of the release file
-project.ext.publish_prefix = (minSupportedVersion == maxSupportedVersion) ? minSupportedVersion : "${minSupportedVersion}-${maxSupportedVersion}";
-project.ext.publish_prefix = project.ext.publish_prefix + '-' + project.ext.mod_version;
+def version_prefix = (minSupportedVersion == maxSupportedVersion) ? minSupportedVersion : "${minSupportedVersion}-${maxSupportedVersion}";
+project.ext.publish_prefix = version_prefix + '-' + project.ext.mod_version;
 
 // Define a custom task to dump properties
 task exportProperties {
