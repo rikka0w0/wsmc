@@ -118,6 +118,7 @@ jobs:
         github-prerelease: false
 
         files: |
+          neoforge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           forge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
 
