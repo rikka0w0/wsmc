@@ -113,11 +113,13 @@ jobs:
 
         # Only include this section if you wish to publish your assets on GitHub.
         github-tag: ${{ env.GITHUB_TAG_NAME }}
+        github-commitish: ${{ env.GITHUB_SHA }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         github-draft: false
         github-prerelease: false
 
         files: |
+          neoforge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           forge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
 
@@ -147,7 +149,7 @@ jobs:
         game-versions: "${{ env.MC_RANGE_NEOFORGE }}"
         loaders: neoforge
         version-type: beta
-        files: neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
+        files: neoforge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
         java: Java ${{ env.java-version }}
 
     - name: Publish to CurseForge (Forge version)
