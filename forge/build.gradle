@@ -115,6 +115,12 @@ dependencies {
     // Apply Mixin AP
     annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
 
+    // MixinExtra
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
+        jarJar.ranged(it, "[0.4.1,)")
+    }
+
     // Netty's http and websocket support
     minecraftLibrary(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version) {
     	exclude(group: 'io.netty')
