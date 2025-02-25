@@ -3,10 +3,12 @@ Enable Websocket support for Minecraft Java.
 Since most CDN providers(at least for their free tier) do not support raw TCP proxy, with the help of this mod, the owner can now hide the server behind a CDN and let the players connect via WebSocket, thus preventing DDoS attacks.
 
 For Minecraft Forge, Neoforge and Fabric:
+* 1.20.5, 1.20.6, 1.21, 1.21.1, 1.21.2, 1.21.3, 1.21.4
 * 1.20.2, 1.20.3, 1.20.4
 * 1.20.1
+* 1.19.2
 
-This branch is for 1.20.2, 1.20.3, and 1.20.4.
+This branch is for 1.20.5 and above.
 
 This mod runs standalone and does not have any dependency.
 
@@ -116,3 +118,5 @@ cd wsmc/forge
 ```
 ./gradlew -Dorg.gradle.java.home=/path_to_jdk_directory <commands>
 ```
+* Since 1.18.1, Minecraft requires Java 17
+* Since 1.20.5, Minecraft requires Java 21

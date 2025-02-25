@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  java-version: '17'
+  java-version: '21'
   curseforge-id: 920581
 
 jobs:
