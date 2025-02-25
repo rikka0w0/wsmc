@@ -148,7 +148,7 @@ jobs:
         game-versions: "${{ env.MC_RANGE_NEOFORGE }}"
         loaders: neoforge
         version-type: beta
-        files: neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
+        files: neoforge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
         java: Java ${{ env.java-version }}
 
     - name: Publish to CurseForge (Forge version)
