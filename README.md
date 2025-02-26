@@ -6,9 +6,9 @@ For Minecraft Forge, Neoforge and Fabric:
 * 1.20.5, 1.20.6, 1.21, 1.21.1, 1.21.2, 1.21.3, 1.21.4
 * 1.20.2, 1.20.3, 1.20.4
 * 1.20.1
-* 1.19.2
+* 1.18.2, 1.19.x, 1.20
 
-This branch is for 1.20.1 only.
+This branch is for 1.18.2, 1.19.x and 1.20.
 
 This mod runs standalone and does not have any dependency.
 
