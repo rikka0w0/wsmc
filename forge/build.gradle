@@ -166,6 +166,11 @@ tasks.named('jar', Jar).configure {
 }
 jar.archiveClassifier = 'forge-slim';
 
+reobf {
+    jar {}
+    jarJar {}
+}
+
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 // When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
