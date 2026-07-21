@@ -8,27 +8,23 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Objects;
 
-import net.minecraft.client.multiplayer.resolver.ServerAddress;
-
 /**
- * This class defines additional information added to the vanilla {@link ServerAddress}.
+ * This record-like class defines additional information added to the vanilla {@link net.minecraft.client.multiplayer.resolver.ServerAddress}.
  * <p>
  * You are not supposed to compare two {@link WebSocketConnectionInfo} instances directly.
  * <p>
- * Compare vanilla {@link ServerAddress} instances instead.
+ * Compare vanilla {@link net.minecraft.client.multiplayer.resolver.ServerAddress} instances instead.
  * <p>
- * Both vanilla {@link ServerAddress} and this class are immutable.
+ * Both vanilla {@link net.minecraft.client.multiplayer.resolver.ServerAddress} and this class are immutable.
  */
 public class WebSocketConnectionInfo {
-	public final ServerAddress owner;
 	public final URI uri;
 	public final String sni;
 	public final String httpHostname;
 
-	private WebSocketConnectionInfo(ServerAddress owner, URI uri,
+	private WebSocketConnectionInfo(URI uri,
 		String sni, String httpHostname
 	) {
-		this.owner = owner;
 		this.uri = uri;
 		this.sni = sni;
 		this.httpHostname = httpHostname;
@@ -37,7 +33,7 @@ public class WebSocketConnectionInfo {
 	/**
 	 * Compare URI components, sni and httpHostname.
 	 * <p>
-	 * Does not check the owner ({@link ServerAddress}).
+	 * Does not check the owner {@link net.minecraft.client.multiplayer.resolver.ServerAddress}.
 	 * <p>
 	 * Vanilla ServerAddress checks Host and port.
 	 */
@@ -65,24 +61,12 @@ public class WebSocketConnectionInfo {
 			return false;
 		}
 
-		WebSocketConnectionInfo other = (WebSocketConnectionInfo) that;
-
-		// Check vanilla fields
-		if (!IWebSocketServerAddress.from(this.owner).getRawHost().equals(
-				IWebSocketServerAddress.from(other.owner).getRawHost()))
-			return false;
-
-		if (this.owner.getPort() != other.owner.getPort())
-			return false;
-
-		return this.equalTo(other);
+		return this.equalTo((WebSocketConnectionInfo) that);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hashCode(
-			this.owner.getPort(),
-			IWebSocketServerAddress.from(this.owner).getRawHost(),
 			this.uri,
 			this.sni,
 			this.httpHostname);
@@ -109,7 +93,10 @@ public class WebSocketConnectionInfo {
 	 * @return null if uriString is not a valid WebSocket Uri (including vanilla TCP).
 	 */
 	@Nullable
-	public static ServerAddress fromWsUri(String uriString) {
+	public static WebSocketConnectionInfo parseUri(String uriString) {
+		if (uriString == null)
+			return null;
+
 		try {
 			URI uri = new URI(uriString);
 
@@ -190,11 +177,8 @@ public class WebSocketConnectionInfo {
 				uri.getQuery(),
 				uri.getFragment());
 
-			ServerAddress result = new ServerAddress(hostname, port);
-			WebSocketConnectionInfo connInfo = new WebSocketConnectionInfo(result, uri, sni, hostnameInHeader);
-			((IWebSocketServerAddress)(Object)result).setWsConnectionInfo(connInfo);
-			return result;
-		} catch (URISyntaxException e) {
+			return new WebSocketConnectionInfo(uri, sni, hostnameInHeader);
+		} catch (IllegalArgumentException | URISyntaxException e) {
 		}
 
 		return null;

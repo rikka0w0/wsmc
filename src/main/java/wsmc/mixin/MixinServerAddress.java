@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.net.HostAndPort;
@@ -27,6 +29,26 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 	@Unique
 	@Nullable
 	private WebSocketConnectionInfo connInfo;
+
+	@Redirect(
+		method = "<init>(Ljava/lang/String;I)V",
+		at = @At(value = "INVOKE", target = "Lcom/google/common/net/HostAndPort;fromParts(Ljava/lang/String;I)Lcom/google/common/net/HostAndPort;"),
+		require = 1
+	)
+	private static HostAndPort parseWebSocketUriForConstructor(String host, int port) {
+		WebSocketConnectionInfo connInfo = WebSocketConnectionInfo.parseUri(host);
+		if (connInfo != null)
+			return HostAndPort.fromParts(connInfo.uri.getHost(), connInfo.uri.getPort());
+
+		return HostAndPort.fromParts(host, port);
+	}
+
+	@Inject(method = "<init>(Ljava/lang/String;I)V", at = @At("RETURN"), require = 1)
+	private void initWebSocketConnectionInfo(String host, int port, CallbackInfo callback) {
+		WebSocketConnectionInfo connInfo = WebSocketConnectionInfo.parseUri(host);
+		if (connInfo != null)
+			this.connInfo = connInfo;
+	}
 
 	@Override
 	public void setWsConnectionInfo(@Nullable WebSocketConnectionInfo connInfo) {
@@ -101,14 +123,17 @@ public class MixinServerAddress implements IWebSocketServerAddress {
 
 	@Inject(at = @At("HEAD"), method = "parseString", require = 1, cancellable = true)
 	private static void parseString(String uriString, CallbackInfoReturnable<ServerAddress> callback) {
-		ServerAddress serverAddress = WebSocketConnectionInfo.fromWsUri(uriString);
-		if (serverAddress != null)
+		WebSocketConnectionInfo connInfo = WebSocketConnectionInfo.parseUri(uriString);
+		if (connInfo != null) {
+			ServerAddress serverAddress = new ServerAddress(connInfo.uri.getHost(), connInfo.uri.getPort());
+			((IWebSocketServerAddress)(Object)serverAddress).setWsConnectionInfo(connInfo);
 			callback.setReturnValue(serverAddress);
+		}
 	}
 
 	@Inject(at = @At("HEAD"), method = "isValidAddress", require = 1, cancellable = true)
 	private static void isValidAddress(String uriString, CallbackInfoReturnable<Boolean> callback) {
-		if (WebSocketConnectionInfo.fromWsUri(uriString) != null)
+		if (WebSocketConnectionInfo.parseUri(uriString) != null)
 			callback.setReturnValue(true);
 	}
 }

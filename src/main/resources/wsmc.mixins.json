@@ -6,7 +6,8 @@
 	"mixins": [
 		"MixinServerConnectionListener",
 		"MixinConnection",
-		"MixinConnectionChInit"
+		"MixinConnectionChInit",
+		"MixinTransferCommand"
 	],
 	"client": [
 		"MixinConnectScreen",

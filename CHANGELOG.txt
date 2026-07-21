@@ -1,2 +1,1 @@
-1. Remove Jar-in-Jar netty-codec-http as vanilla ships it
-2. [Forge only] Upgrade toolchain to FG7
+Support /transfer, solve #24
