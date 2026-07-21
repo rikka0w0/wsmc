@@ -1,2 +1,1 @@
-1. Support 26.1 and 26.2
-2. Remove Jar-in-Jar netty-codec-http as vanilla ships it
+Support /transfer, solve #24
