@@ -48,6 +48,13 @@ jobs:
         ./gradlew exportProperties build
         cd ..
 
+    - name: Build Velocity
+      run: |
+        cd velocity
+        chmod +x ./gradlew
+        ./gradlew exportProperties build
+        cd ..
+
     - name: Get Info and Perform Substitutions
       run: |
         # Parse common.properties into key-value pairs
@@ -88,7 +95,7 @@ jobs:
         minecraft_version=$(get_prop_value "$PROPS" "minecraft_version")
         publish_prefix=$(get_prop_value "$PROPS" "publish_prefix")
         minecraft_version_range=$(get_prop_value "$PROPS" "minecraft_version_range")
-        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge, Neoforge, and Fabric ${minecraft_versions_declared}"
+        set_action_env "GITHUB_RELEASE_TITLE" "${mod_version} for Minecraft Forge, Neoforge, Fabric ${minecraft_versions_declared} + Velocity"
         set_action_env "GITHUB_TAG_NAME" "${mod_version}_${minecraft_version}"
         set_action_env "CURSEFORGE_FABRIC" "${publish_prefix}-fabric"
         set_action_env "MC_RANGE_FABRIC" "${minecraft_version_range}"
@@ -122,6 +129,7 @@ jobs:
           neoforge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           forge/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
           fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
+          velocity/build/libs/!(*-@(dev|sources|javadoc)).jar
 
     - name: Publish to CurseForge (Fabric version)
       uses: Kir-Antipov/mc-publish@v3.3

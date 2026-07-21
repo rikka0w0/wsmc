@@ -1,0 +1,68 @@
+plugins {
+	id 'java'
+	id 'eclipse'
+	id 'maven-publish'
+}
+
+apply from: '../common.gradle'
+
+version = project.mod_version
+group = project.dev_group
+
+base {
+	archivesName = "${project.archives_base_name}-velocity"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+repositories {
+	mavenCentral()
+	maven {
+		name = 'papermc'
+		url = 'https://repo.papermc.io/repository/maven-public/'
+	}
+}
+
+dependencies {
+	compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+	annotationProcessor 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+
+	compileOnly 'io.netty:netty-codec-http:4.1.100.Final'
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src/main/java'
+			srcDir '../src/main/java'
+			exclude 'wsmc/mixin/**'
+			exclude 'wsmc/client/**'
+			exclude 'wsmc/api/**'
+			exclude 'wsmc/WebSocketConnectionInfo.java'
+			exclude 'wsmc/IWebSocketServerAddress.java'
+			exclude 'wsmc/IConnectionEx.java'
+			exclude 'wsmc/UnitTest.java'
+		}
+		resources {
+			srcDir 'src/main/resources'
+		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 17
+}
+
+tasks.named('jar', Jar).configure {
+	manifest {
+		attributes([
+			'Implementation-Title': project.archives_base_name,
+			'Implementation-Version': project.version,
+			'Implementation-Vendor': 'Rikka0w0',
+			'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
+}
