@@ -57,6 +57,7 @@ public class WebSocketClientHandler extends WebSocketHandler {
 
 		DefaultHttpHeaders headers = new DefaultHttpHeaders();
 		headers.set("Host", httpHostname);
+		headers.set("User-Agent", buildUserAgent());
 
         // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
         // If you change it to V00, ping is not supported and remember to change
@@ -166,4 +167,56 @@ public class WebSocketClientHandler extends WebSocketHandler {
 			});
 		}
 	}
+
+	// === User-Agent 构建逻辑与加载器检测合并于此 ===
+	private static String buildUserAgent() {
+		String javaVersion = System.getProperty("java.version");
+
+		String modName = WSMC.modName != null ? WSMC.modName : "UnknownMod";
+		String modVersion = WSMC.modVersion != null ? WSMC.modVersion : "0.0.0";
+
+		String loaderName = "Unknown";
+		String mcVersion = "unknown";
+
+		try {
+			Class.forName("net.neoforged.fml.common.Mod");
+			loaderName = "NeoForge";
+			mcVersion = net.neoforged.fml.loading.FMLLoader.versionInfo().mcVersion();
+		} catch (ClassNotFoundException ignored1) {
+			try {
+				Class.forName("net.minecraftforge.fml.common.Mod");
+				loaderName = "Forge";
+				mcVersion = net.minecraftforge.fml.loading.FMLLoader.versionInfo().mcVersion();
+			} catch (ClassNotFoundException ignored2) {
+				try {
+					Class.forName("net.fabricmc.loader.api.FabricLoader");
+					loaderName = "Fabric";
+					mcVersion = net.fabricmc.loader.api.FabricLoader.getInstance()
+						.getModContainer("minecraft")
+						.map(m -> m.getMetadata().getVersion().getFriendlyString())
+						.orElse("unknown");
+				} catch (ClassNotFoundException ignored3) {
+					try {
+						Class.forName("org.quiltmc.loader.api.QuiltLoader");
+						loaderName = "Quilt";
+						mcVersion = org.quiltmc.loader.api.QuiltLoader.getModContainer("minecraft")
+							.map(m -> m.metadata().version().raw())
+							.orElse("unknown");
+					} catch (ClassNotFoundException ignored4) {
+						// unknown loader
+					}
+				}
+			}
+		}
+
+		return String.format("Java/%s Minecraft/%s %s/%s %s/%s",
+			javaVersion,
+			mcVersion,
+			modName,
+			modVersion,
+			loaderName,
+			mcVersion // loader version 和 MC 版本相同或不可区分时使用
+		);
+	}
+
 }
